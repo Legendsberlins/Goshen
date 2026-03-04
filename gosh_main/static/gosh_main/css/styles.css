@@ -91,8 +91,10 @@ body {
 }
 
 .nav-toggle {
-    background: none;
-    border: 0;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    color: var(--muted);
     font-size: 1.4rem;
     line-height: 1;
     cursor: pointer;
@@ -1872,12 +1874,13 @@ body {
 
 @media (max-width: 480px) {
     .footer-quicklinks {
-        flex-direction: column;
-        align-items: center;
+        flex-direction: row;
+        justify-content: center;
+        gap: 0.35rem;
     }
 
     .footer-quicklinks a {
-        width: 100%;
+        width: auto;
         text-align: center;
         padding: 0.5rem;
     }
@@ -1886,7 +1889,18 @@ body {
 /* === RESPONSIVE === */
 @media (max-width: 768px) {
     .hero-text-overlay {
-        top: 15%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: min(95%, 760px);
+        padding: 0 0.75rem;
+    }
+
+    .hero-title {
+        font-size: clamp(1.55rem, 6vw, 2.1rem);
+    }
+
+    .hero-tagline {
+        font-size: clamp(0.95rem, 3.5vw, 1.15rem);
     }
     
     .section-title {
