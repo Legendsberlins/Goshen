@@ -1,0 +1,64 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# Secrets / environment files
+.env
+.env.*
+*.pem
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Test / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Type check / lint caches
+.mypy_cache/
+.ruff_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Optional local notes with sensitive content
+FLUTTERWAVE_API_KEYS.md
+PAYMENT_SETUP.md
+SETUP_PAYMENT.md
+PAYMENT_INTEGRATION.md
+ORDER_TRACKING_SETUP.md
+PAYMENT_INTEGRATION_SETUP.md
+TRACKING_DB_SCHEMA.md
+TRACKING_QUICK_START.md
