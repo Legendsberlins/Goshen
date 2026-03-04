@@ -43,6 +43,70 @@ CATEGORY_DISPLAY_NAMES = {
     'animal-feeds': 'Animal Feeds',
 }
 
+GENERIC_CATEGORY_IMAGE_NAMES = {
+    'product2.jpg',
+    'product4.jpg',
+    'product5.jpg',
+    'product6.jpg',
+    'feature_1.jpg',
+    'feature_2.jpg',
+    'feature_3.jpg',
+}
+
+PRODUCT_SLUG_IMAGE_FALLBACKS = {
+    'dried-ukazi-afang-leaf-1kg': 'dried_afang.jpg',
+    'dried-bitter-leaf-1kg': 'dried_bitter_leaf.jpg',
+    'dried-ugu-fluted-pumpkin-1kg': 'dried_ugu.jpg',
+    'dried-utazi-leaf-1kg': 'dried_utazi.jpg',
+    'ground-melon-egusi-1kg': 'ground_melon.jpg',
+    'whole-melon-egusi-seeds-5kg': 'whole_melon_seeds.jpg',
+    'ground-ogbono-seeds-1kg': 'ground_ogbono.jpg',
+    'whole-ogbono-seeds-5kg': 'whole_ogbono_seeds.jpg',
+    'catfish-smoked-5kg': 'Feature_2.jpg',
+    'crayfish-whole-5kg': 'crayfish_whole.jpg',
+    'crayfish-ground-5kg': 'crayfish_ground.jpg',
+    'snail-dried-frozen-5kg': 'dried_snail.jpg',
+    'tigernut-milk-500ml': 'tigernut_milk.jpg',
+    'coconut-milk-500ml': 'coconut_milk.jpg',
+    'almond-milk-500ml': 'almond_milk.jpg',
+    'soy-milk-500ml': 'soy_milk.jpg',
+    'red-palm-oil-5l': 'red_palm_oil.jpg',
+    'groundnut-oil-5l': 'groundnut_oil.jpg',
+    'sunflower-oil-5l': 'sunflower_oil.jpg',
+    'palm-olein-vegetable-oil-5l': 'vegetable_oil.jpg',
+    'soybean-oil-5l': 'soybean_oil.jpg',
+    'almond-oil-5l': 'almond_oil.jpg',
+    'coconut-oil-5l': 'coconut_oil.jpg',
+    'yam-flour-5kg': 'yam_flour.jpg',
+    'cassava-flour-5kg': 'cassava_flour.jpg',
+    'plantain-flour-5kg': 'plantain_flour.jpg',
+    'cocoyam-flour-5kg': 'cocoyam_flour.jpg',
+    'almond-flour-5kg': 'almond_flour.jpg',
+    'soybean-flour-5kg': 'soybean_flour.jpg',
+    'honey-bean-flour-5kg': 'honey_bean_flour.jpg',
+    'garri-yellow-white-5kg': 'garri.jpg',
+    'dry-red-pepper-chili-cameroon-pepper': 'dried_red_pepper.jpg',
+    'ginger-powder-198g': 'ginger_powder.jpg',
+    'garlic-powder-198g': 'garlic_powder.jpg',
+    'turmeric-powder-198g': 'tumeric_powder.jpg',
+    'dry-onion-powder-198g': 'dried_onion_powder.jpg',
+    'red-pepper-paste-198g': 'red_pepper_paste.jpg',
+    'tomato-paste-198g': 'tomato_paste.jpg',
+    'tomato-ketchup-1kg': 'tomato_ketchup.jpg',
+    'ginger-juice-500ml': 'ginger_juice.jpg',
+    'zobo-hibiscus-drink-500ml': 'zobo.jpg',
+    'turmeric-juice-500ml': 'tumeric_juice.jpg',
+    'orange-juice-500ml': 'orange_juice.jpg',
+    'pineapple-juice-500ml': 'pineapple_juice.jpg',
+    'apple-juice-500ml': 'apple_juice.jpg',
+    'mango-juice-500ml': 'mango_juice.jpg',
+    'watermelon-juice-500ml': 'watermelon_juice.jpg',
+    'table-water-500ml': 'table_water.jpg',
+    'sachet-water-500ml': 'sachet_water.jpg',
+    'fish-feed-15kg': 'fish_feed.jpg',
+    'poultry-feed-25kg': 'poultry_feed.jpg',
+}
+
 
 def get_category_display_name(slug):
     return CATEGORY_DISPLAY_NAMES.get(slug, slug.replace('-', ' ').title())
@@ -56,6 +120,9 @@ def normalize_image_url(image_value):
 
     if value.startswith(("http://", "https://", "data:")):
         return value
+
+    if '/fakepath/' in value.lower() or re.match(r'^[A-Za-z]:/', value):
+        value = value.rsplit('/', 1)[-1]
 
     if value.startswith("/static/") or value.startswith("/media/"):
         return value
@@ -76,6 +143,23 @@ def normalize_image_url(image_value):
         return f"/static/gosh_main/images/{value}"
 
     return f"/static/{value}"
+
+
+def resolve_product_image_url(product):
+    raw_image = getattr(product, 'image', '')
+    normalized = normalize_image_url(raw_image)
+
+    image_name = (normalized.rsplit('/', 1)[-1].lower() if normalized else '')
+    slug = str(getattr(product, 'slug', '') or '').strip().lower()
+
+    if normalized and image_name not in GENERIC_CATEGORY_IMAGE_NAMES:
+        return normalized
+
+    fallback_filename = PRODUCT_SLUG_IMAGE_FALLBACKS.get(slug)
+    if fallback_filename:
+        return f"/static/gosh_main/images/{fallback_filename}"
+
+    return normalized
 
 
 def is_customer_user(request):
@@ -327,7 +411,7 @@ def home(request):
 
     if db_featured:
         for product in db_featured:
-            product.image_url = normalize_image_url(getattr(product, 'image', ''))
+            product.image_url = resolve_product_image_url(product)
             featured.append(product)
     else:
         mock_products = get_mock_products()[:6]
@@ -431,7 +515,7 @@ def shop(request):
             )
         products = list(db_qs.order_by('name'))
         for product in products:
-            product.image_url = normalize_image_url(getattr(product, 'image', ''))
+            product.image_url = resolve_product_image_url(product)
     except Exception:
         products = []
 
@@ -582,7 +666,7 @@ def product_detail(request, product_id):
         product = Product.objects.get(id=pid_int)
         if getattr(getattr(product, 'category', None), 'slug', '') in EXCLUDED_CATEGORY_SLUGS:
             return redirect('gosh_main:shop')
-        product.image_url = normalize_image_url(getattr(product, 'image', ''))
+        product.image_url = resolve_product_image_url(product)
     except Product.DoesNotExist:
         p_dict = next((p for p in get_mock_products() if p.get('id') == pid_int), None)
         if not p_dict:
@@ -617,7 +701,7 @@ def cart_view(request):
     for pid, qty in cart.items():
         try:
             p = Product.objects.get(id=int(pid))
-            p.image_url = normalize_image_url(getattr(p, 'image', ''))
+            p.image_url = resolve_product_image_url(p)
             items.append({ 'product': p, 'qty': qty, 'line_total': (p.price or 0) * qty })
             total += (p.price or 0) * qty
         except Product.DoesNotExist:
