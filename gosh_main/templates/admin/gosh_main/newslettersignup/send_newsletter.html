@@ -1,0 +1,19 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div id="content-main">
+    <h1>Send Newsletter</h1>
+    <p>This will send to all currently subscribed newsletter emails.</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <fieldset class="module aligned">
+            {{ form.as_p }}
+        </fieldset>
+        <div class="submit-row">
+            <input type="submit" value="Send Newsletter" class="default">
+            <a href="{% url 'admin:gosh_main_newslettersignup_changelist' %}" class="button">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

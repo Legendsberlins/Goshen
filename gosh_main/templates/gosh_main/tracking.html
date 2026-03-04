@@ -1,0 +1,727 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Order - Goshen Giant Food</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Mapbox GL JS -->
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
+    <!-- MapboxGL Directions -->
+    <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.js'></script>
+    <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.css' />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px 0;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .search-box {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .search-box input {
+            flex: 1;
+            min-width: 250px;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .search-box button {
+            padding: 12px 30px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .search-box button:hover {
+            background: #2980b9;
+        }
+
+        .tracking-container {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .map-container {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            min-height: 500px;
+            background: #e8e8e8;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            min-height: 500px;
+        }
+
+        .tracking-info {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .tracking-number {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+
+        .tracking-number strong {
+            color: #2c3e50;
+            font-size: 1.1rem;
+            font-family: 'Courier New', monospace;
+        }
+
+        .order-number {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-bottom: 15px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        .status-badge.warehouse {
+            background: #f39c12;
+            color: white;
+        }
+
+        .status-badge.in_transit {
+            background: #3498db;
+            color: white;
+        }
+
+        .status-badge.arrived_hub {
+            background: #9b59b6;
+            color: white;
+        }
+
+        .status-badge.out_for_delivery {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .status-badge.delivered {
+            background: #27ae60;
+            color: white;
+        }
+
+        .info-group {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .info-group:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .info-label {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .logistics-company {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logistics-logo {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            background: #f5f7fa;
+            padding: 5px;
+            border-radius: 5px;
+        }
+
+        .timeline {
+            margin-top: 30px;
+        }
+
+        .timeline-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .timeline-item:last-child {
+            border-bottom: none;
+        }
+
+        .timeline-dot {
+            width: 12px;
+            height: 12px;
+            background: #3498db;
+            border-radius: 50%;
+            margin-top: 3px;
+            flex-shrink: 0;
+        }
+
+        .timeline-content {
+            flex: 1;
+        }
+
+        .timeline-status {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.95rem;
+            margin-bottom: 3px;
+        }
+
+        .timeline-message {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-bottom: 3px;
+        }
+
+        .timeline-time {
+            font-size: 0.85rem;
+            color: #95a5a6;
+        }
+
+        .error-message {
+            background: #ffe5e5;
+            color: #c0392b;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #c0392b;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .tracking-container {
+                grid-template-columns: 1fr;
+            }
+
+            .tracking-info {
+                position: static;
+            }
+
+            header h1 {
+                font-size: 1.5rem;
+            }
+
+            .search-box {
+                flex-direction: column;
+            }
+
+            .search-box input {
+                min-width: 100%;
+            }
+
+            #map {
+                min-height: 400px;
+            }
+        }
+
+        .delivered-badge {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .delivered-badge i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .delivered-badge p {
+            font-size: 0.95rem;
+        }
+
+        .pagination {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .pagination button {
+            padding: 8px 15px;
+            margin: 0 5px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .pagination button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1><i class="fas fa-map-marked-alt"></i> Track Your Order</h1>
+            <p>Monitor your package in real-time across Nigeria and internationally</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Search Box -->
+        <div class="search-box">
+            <input 
+                type="text" 
+                id="trackingInput" 
+                placeholder="Enter tracking number (e.g., TRK-XXXXXXXX-XXXXXXXX)"
+                value="{{ tracking.tracking_number|default:'' }}"
+            >
+            <button onclick="searchTracking()"><i class="fas fa-search"></i> Track</button>
+        </div>
+
+        <!-- Error Message -->
+        {% if error_message %}
+        <div class="error-message">
+            <i class="fas fa-exclamation-circle"></i> {{ error_message }}
+        </div>
+        {% endif %}
+
+        <!-- Tracking Content -->
+        {% if tracking %}
+        <div class="tracking-container">
+            <!-- Map -->
+            <div class="map-container">
+                <div id="map"></div>
+            </div>
+
+            <!-- Tracking Info -->
+            <div class="tracking-info">
+                <div class="tracking-number">
+                    Tracking Number: <strong id="trackingNum">{{ tracking.tracking_number }}</strong>
+                </div>
+                <div class="order-number">
+                    Order: <strong>{{ tracking.order.order_number }}</strong>
+                </div>
+
+                <!-- Status Badge -->
+                <div class="status-badge {{ tracking.status }}" id="statusBadge">
+                    {{ tracking.get_status_display }}
+                </div>
+
+                <!-- Current Location -->
+                <div class="info-group">
+                    <div class="info-label"><i class="fas fa-map-pin"></i> Current Location</div>
+                    <div class="info-value" id="currentLocation">{{ tracking.current_location_name }}</div>
+                </div>
+
+                <!-- Destination -->
+                <div class="info-group">
+                    <div class="info-label"><i class="fas fa-home"></i> Delivery Address</div>
+                    <div class="info-value">
+                        {{ tracking.order.recipient_name }}<br>
+                        {{ tracking.order.address_line }}<br>
+                        {{ tracking.order.city }}, {{ tracking.order.state }}<br>
+                        {{ tracking.order.country }}
+                    </div>
+                </div>
+
+                <!-- Estimated Delivery -->
+                <div class="info-group">
+                    <div class="info-label"><i class="fas fa-calendar-alt"></i> Estimated Delivery</div>
+                    <div class="info-value" id="estimatedDelivery">
+                        {% if tracking.delivered_at %}
+                            Delivered on {{ tracking.delivered_at|date:"M d, Y H:i" }}
+                        {% elif tracking.estimated_delivery %}
+                            {{ tracking.estimated_delivery|date:"M d, Y" }}
+                        {% else %}
+                            Pending
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Logistics Company -->
+                {% if tracking.logistics_company %}
+                <div class="info-group">
+                    <div class="info-label"><i class="fas fa-truck"></i> Shipping Partner</div>
+                    <div class="logistics-company">
+                        {% if tracking.logistics_company.logo %}
+                        <img src="{{ tracking.logistics_company.logo }}" alt="{{ tracking.logistics_company.name }}" class="logistics-logo">
+                        {% else %}
+                        <div style="width: 50px; height: 50px; background: #f5f7fa; border-radius: 5px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-truck" style="font-size: 1.5rem; color: #3498db;"></i>
+                        </div>
+                        {% endif %}
+                        <div>
+                            <div style="font-weight: 600;">{{ tracking.logistics_company.name }}</div>
+                            <div style="font-size: 0.9rem; color: #7f8c8d;">{{ tracking.logistics_company.phone }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Delivered Badge -->
+                {% if tracking.is_delivered %}
+                <div class="delivered-badge">
+                    <i class="fas fa-check-circle"></i>
+                    <p>Successfully Delivered!</p>
+                </div>
+                {% endif %}
+
+                <!-- Timeline -->
+                <div class="timeline" id="timeline">
+                    <div class="timeline-title">Tracking History</div>
+                    <!-- Timeline items will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- WebSocket Connection for Real-time Updates -->
+        <script>
+            const MAPBOX_TOKEN = '{{ mapbox_token }}';
+            const TRACKING_NUMBER = '{{ tracking.tracking_number }}';
+            const TRACKING_DATA = {
+                currentLocation: {
+                    lat: {{ tracking.current_location_lat }},
+                    lng: {{ tracking.current_location_lng }},
+                    name: '{{ tracking.current_location_name }}'
+                },
+                destinationLocation: {
+                    lat: {{ tracking.destination_lat }},
+                    lng: {{ tracking.destination_lng }}
+                },
+                status: '{{ tracking.status }}'
+            };
+
+            // Initialize Mapbox
+            mapboxgl.accessToken = MAPBOX_TOKEN;
+            
+            if (MAPBOX_TOKEN) {
+                const map = new mapboxgl.Map({
+                    container: 'map',
+                    style: 'mapbox://styles/mapbox/streets-v11',
+                    center: [
+                        (TRACKING_DATA.currentLocation.lng + TRACKING_DATA.destinationLocation.lng) / 2,
+                        (TRACKING_DATA.currentLocation.lat + TRACKING_DATA.destinationLocation.lat) / 2
+                    ],
+                    zoom: 8
+                });
+
+                // Add navigation control
+                map.addControl(new mapboxgl.NavigationControl());
+
+                map.on('load', () => {
+                    // Add current location marker (Blue)
+                    const currentMarker = document.createElement('div');
+                    currentMarker.style.backgroundImage = 'url(\'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%223498db%22%3E%3Cpath d=%22M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z%22/%3E%3C/svg%3E\')';
+                    currentMarker.style.width = '40px';
+                    currentMarker.style.height = '40px';
+                    currentMarker.style.backgroundSize = '100%';
+                    currentMarker.style.backgroundRepeat = 'no-repeat';
+                    currentMarker.style.cursor = 'pointer';
+
+                    new mapboxgl.Marker(currentMarker)
+                        .setLngLat([TRACKING_DATA.currentLocation.lng, TRACKING_DATA.currentLocation.lat])
+                        .setPopup(new mapboxgl.Popup().setHTML(`
+                            <div style="padding: 10px;">
+                                <strong>Current Location</strong><br>
+                                ${TRACKING_DATA.currentLocation.name}
+                            </div>
+                        `))
+                        .addTo(map);
+
+                    // Add destination marker (Green)
+                    const destMarker = document.createElement('div');
+                    destMarker.style.backgroundImage = 'url(\'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%2327ae60%22%3E%3Cpath d=%22M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z%22/%3E%3C/svg%3E\')';
+                    destMarker.style.width = '40px';
+                    destMarker.style.height = '40px';
+                    destMarker.style.backgroundSize = '100%';
+                    destMarker.style.backgroundRepeat = 'no-repeat';
+                    destMarker.style.cursor = 'pointer';
+
+                    new mapboxgl.Marker(destMarker)
+                        .setLngLat([TRACKING_DATA.destinationLocation.lng, TRACKING_DATA.destinationLocation.lat])
+                        .setPopup(new mapboxgl.Popup().setHTML(`
+                            <div style="padding: 10px;">
+                                <strong>Delivery Location</strong>
+                            </div>
+                        `))
+                        .addTo(map);
+
+                    // Draw route line between locations
+                    map.addSource('route', {
+                        'type': 'geojson',
+                        'data': {
+                            'type': 'Feature',
+                            'geometry': {
+                                'type': 'LineString',
+                                'coordinates': [
+                                    [TRACKING_DATA.currentLocation.lng, TRACKING_DATA.currentLocation.lat],
+                                    [TRACKING_DATA.destinationLocation.lng, TRACKING_DATA.destinationLocation.lat]
+                                ]
+                            }
+                        }
+                    });
+
+                    map.addLayer({
+                        'id': 'route',
+                        'type': 'line',
+                        'source': 'route',
+                        'layout': {
+                            'line-join': 'round',
+                            'line-cap': 'round'
+                        },
+                        'paint': {
+                            'line-color': '#3498db',
+                            'line-width': 3,
+                            'line-dasharray': [5, 5]
+                        }
+                    });
+
+                    // Fit map bounds
+                    const bounds = new mapboxgl.LngLatBounds(
+                        [TRACKING_DATA.currentLocation.lng, TRACKING_DATA.currentLocation.lat],
+                        [TRACKING_DATA.destinationLocation.lng, TRACKING_DATA.destinationLocation.lat]
+                    );
+                    map.fitBounds(bounds, { padding: 50 });
+                });
+
+                // WebSocket Connection for Real-time Updates
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const ws = new WebSocket(`${protocol}//${window.location.host}/ws/tracking/`);
+
+                ws.onopen = () => {
+                    console.log('WebSocket connection established');
+                    // Request tracking data
+                    ws.send(JSON.stringify({
+                        action: 'get_tracking',
+                        tracking_number: TRACKING_NUMBER
+                    }));
+                };
+
+                ws.onmessage = (event) => {
+                    const message = JSON.parse(event.data);
+                    console.log('WebSocket message:', message);
+
+                    if (message.type === 'tracking_update') {
+                        const data = message.data;
+                        updateTrackingUI(data);
+                        updateMap(data);
+                    } else if (message.type === 'tracking_data') {
+                        const tracking = message.tracking;
+                        updateTrackingUI(tracking);
+                    }
+                };
+
+                ws.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                };
+
+                ws.onclose = () => {
+                    console.log('WebSocket connection closed');
+                };
+
+                function updateTrackingUI(data) {
+                    // Update status badge
+                    document.getElementById('statusBadge').textContent = data.status_display || data.status;
+                    document.getElementById('statusBadge').className = `status-badge ${data.status}`;
+                    
+                    // Update current location
+                    if (data.current_location) {
+                        document.getElementById('currentLocation').textContent = data.current_location.name;
+                    }
+
+                    // Update estimated delivery
+                    if (data.estimated_delivery) {
+                        const date = new Date(data.estimated_delivery);
+                        document.getElementById('estimatedDelivery').textContent = date.toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                        });
+                    }
+
+                    // Load timeline history
+                    loadTimeline();
+                }
+
+                function updateMap(data) {
+                    if (data.current_location && map.getSource('route')) {
+                        // Update route
+                        map.getSource('route').setData({
+                            'type': 'Feature',
+                            'geometry': {
+                                'type': 'LineString',
+                                'coordinates': [
+                                    [data.current_location.lng, data.current_location.lat],
+                                    [data.destination_location.lng, data.destination_location.lat]
+                                ]
+                            }
+                        });
+                    }
+                }
+            } else {
+                // Mapbox token not configured
+                document.getElementById('map').innerHTML = '<div style="padding: 40px; color: #7f8c8d; text-align: center;"><i class="fas fa-map"></i><p>Map not available. Please configure Mapbox token.</p></div>';
+            }
+
+            // Load tracking history
+            function loadTimeline() {
+                fetch(`/api/tracking/${TRACKING_NUMBER}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.history) {
+                            const timeline = document.getElementById('timeline');
+                            const timelineContent = timeline.querySelector('.timeline-title') ? timeline.querySelector('.timeline-title').nextSibling : null;
+                            
+                            // Remove old items
+                            document.querySelectorAll('.timeline-item').forEach(item => item.remove());
+
+                            // Add new items
+                            data.history.forEach(item => {
+                                const timelineItem = document.createElement('div');
+                                timelineItem.className = 'timeline-item';
+                                timelineItem.innerHTML = `
+                                    <div class="timeline-dot"></div>
+                                    <div class="timeline-content">
+                                        <div class="timeline-status">${item.status_display}</div>
+                                        <div class="timeline-message">${item.message || item.location_name}</div>
+                                        <div class="timeline-time">${new Date(item.recorded_at).toLocaleString()}</div>
+                                    </div>
+                                `;
+                                timeline.appendChild(timelineItem);
+                            });
+                        }
+                    })
+                    .catch(error => console.error('Error loading timeline:', error));
+            }
+
+            // Search functionality
+            function searchTracking() {
+                const trackingNumber = document.getElementById('trackingInput').value.trim();
+                if (trackingNumber) {
+                    window.location.href = `/track/${trackingNumber}/`;
+                }
+            }
+
+            // Enter key support
+            document.getElementById('trackingInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') searchTracking();
+            });
+
+            // Load initial timeline
+            loadTimeline();
+        </script>
+        {% else %}
+        <div style="text-align: center; padding: 60px 20px;">
+            <i class="fas fa-box" style="font-size: 4rem; color: #bdc3c7; margin-bottom: 20px; display: block;"></i>
+            <h2 style="color: #7f8c8d; margin-bottom: 10px;">No Tracking Data</h2>
+            <p style="color: #95a5a6; margin-bottom: 20px;">Enter a tracking number above to track your package</p>
+        </div>
+        {% endif %}
+    </main>
+
+    <footer style="background: #2c3e50; color: white; text-align: center; padding: 30px; margin-top: 50px;">
+        <p>&copy; 2026 Goshen Giant Food. All rights reserved.</p>
+        <p style="font-size: 0.9rem; margin-top: 10px;">
+            <a href="/" style="color: #3498db; text-decoration: none;">Home</a> |
+            <a href="/contact/" style="color: #3498db; text-decoration: none;">Contact</a> |
+            <a href="/privacy/" style="color: #3498db; text-decoration: none;">Privacy</a>
+        </p>
+    </footer>
+</body>
+</html>

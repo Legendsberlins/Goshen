@@ -1,0 +1,85 @@
+{% extends 'gosh_main/base.html' %}
+{% load static humanize %}
+
+{% block title %}Order Confirmation{% endblock %}
+
+{% block content %}
+<section class="checkout-success container">
+    <h2>✓ Order Confirmed!</h2>
+
+    {% if order %}
+    <div class="success-message" style="background:#e8f5e9;padding:1.5rem;border-radius:8px;margin:1rem 0;">
+        <p style="font-size:1.1rem;margin:0;"><strong>Thank you for your order!</strong></p>
+        <p style="margin:0.5rem 0 0 0;">Order number: <strong>{{ order.order_number }}</strong></p>
+        {% if verified %}
+        <p style="margin:0.5rem 0 0 0;color:#2e7d32;">Payment Status: <strong>PAID ✓</strong></p>
+        {% else %}
+        <p style="margin:0.5rem 0 0 0;color:#f57c00;">Payment Status: <strong>PENDING</strong></p>
+        <p style="margin:0.5rem 0 0 0;font-size:0.9rem;">We're verifying your payment. You'll receive a confirmation email shortly.</p>
+        {% endif %}
+    </div>
+
+    <h3>Order Details</h3>
+    <div class="order-details" style="background:#f5f5f5;padding:1rem;border-radius:8px;">
+        <p><strong>Delivery Address:</strong><br>
+        {{ order.recipient_name }}<br>
+        {{ order.address_line }}<br>
+        {{ order.city }}{% if order.state %}, {{ order.state }}{% endif %}<br>
+        {{ order.country }}<br>
+        Phone: {{ order.phone }}</p>
+
+        <h4>Items Ordered:</h4>
+        <ul>
+        {% for item in order.items.all %}
+            <li>{{ item.product_name }} x{{ item.quantity }} — ₦{{ item.line_total|floatformat:2|intcomma }}</li>
+        {% endfor %}
+        </ul>
+
+        <p style="border-top:1px solid #ddd;padding-top:0.5rem;margin-top:0.5rem;">
+            <strong>Subtotal:</strong> ₦{{ order.subtotal|floatformat:2|intcomma }}<br>
+            <strong>Shipping:</strong> ₦{{ order.shipping_cost|floatformat:2|intcomma }}<br>
+            <strong style="font-size:1.1rem;">Total:</strong> <strong style="font-size:1.1rem;">₦{{ order.total|floatformat:2|intcomma }}</strong>
+        </p>
+
+        {% if payment %}
+        <p style="margin-top:1rem;font-size:0.9rem;color:#666;">
+            Payment Method: {{ payment.get_payment_method_display }}<br>
+            {% if payment.gateway_transaction_id %}
+            Transaction ID: {{ payment.gateway_transaction_id }}
+            {% endif %}
+        </p>
+        {% endif %}
+    </div>
+
+    <div style="margin-top:1.5rem;">
+        <p>We've sent a confirmation email to your registered email address.</p>
+        <p>You can track your order status from your account dashboard.</p>
+    </div>
+
+    {% else %}
+    <p>Your order has been placed successfully!</p>
+    {% if payment_method == 'bank_transfer' %}
+    <div class="bank-info" style="background:#fff3e0;padding:1rem;border-radius:8px;margin:1rem 0;">
+        <h3>Bank Transfer Details</h3>
+        <p>Please transfer to:</p>
+        <table style="margin:1rem 0;">
+            <tr><td style="padding:0.3rem 1rem 0.3rem 0;"><strong>Bank:</strong></td><td>First Bank</td></tr>
+            <tr><td style="padding:0.3rem 1rem 0.3rem 0;"><strong>Account:</strong></td><td>0123456789</td></tr>
+            <tr><td style="padding:0.3rem 1rem 0.3rem 0;"><strong>Name:</strong></td><td>Goshen Giant Food</td></tr>
+        </table>
+        <p><em>Use your order reference as the payment reference.</em></p>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <div class="actions" style="margin-top:2rem;">
+        <a href="{% url 'gosh_main:home' %}" class="btn-primary">Continue Shopping</a>
+    </div>
+</section>
+
+<style>
+.checkout-success { text-align:center; padding:2rem 0; max-width:800px; margin:0 auto; }
+.checkout-success .order-details { text-align:left; }
+</style>
+
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends 'gosh_main/base.html' %}
+
+{% block title %}Contact{% endblock %}
+{% load static %}
+
+{% block content %}
+<style>
+	/* Page-specific heading color */
+	h3{ 
+		color: #1B5E20;
+	}
+</style>
+<h2>📞 CONTACT US</h2>
+
+
+<div class="contact-grid">
+	<div class="contact-info">
+		<p>We’d love to hear from you! Whether you’re a customer, distributor, or retail partner, our team is ready to assist.</p>
+
+		{% if contact_info %}
+			{% if contact_info.image %}
+				<img src="{% static contact_info.image %}" alt="Contact image" class="contact-image">
+			{% endif %}
+			<h3>📍 Factory Location:</h3>
+			<p>{{ contact_info.address|linebreaks }}</p>
+
+			<h3>📧 Email:</h3>
+			<p><a href="mailto:{{ contact_info.email }}">{{ contact_info.email }}</a></p>
+
+			<h3>📞 Phone / WhatsApp:</h3>
+			<p>{{ contact_info.phone }}</p>
+
+		{% else %}
+			<h3>📍 Factory Location:</h3>
+			<p>Plot 48, Itam Industrial Layout, Uyo, Akwa Ibom State, Nigeria</p>
+
+			<h3>📧 Email:</h3>
+			<p><a href="mailto:inquiry@goshengiantfoods.com">inquiry@goshengiantfoods.com</a></p>
+
+			<h3>📞 Phone / WhatsApp:</h3>
+			<p>+234 705 702 5093</p>
+		{% endif %}
+
+		<h3>🌐 Business Hours:</h3>
+		<p>Monday – Friday: 8:00 AM – 5:00 PM</p>
+		<p>Saturday: 9:00 AM – 3:00PM</p>
+	</div>
+
+	<div class="contact-form">
+		{% if message_sent %}
+			<div class="alert alert-success">Thanks — your message has been received. We'll get back to you shortly.</div>
+		{% endif %}
+		<form method="post" action="">
+			{% csrf_token %}
+			<label for="name">Your name</label>
+			<input id="name" name="name" required>
+
+			<label for="email">Your email</label>
+			<input id="email" name="email" type="email" required>
+
+			<label for="subject">Subject</label>
+			<input id="subject" name="subject">
+
+			<label for="message">Message</label>
+			<textarea id="message" name="message" rows="6" required></textarea>
+
+			<button class="btn-primary-large" type="submit">Send Message</button>
+		</form>
+	</div>
+</div>
+
+{% endblock %}

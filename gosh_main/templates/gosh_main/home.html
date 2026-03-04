@@ -1,0 +1,381 @@
+{% extends 'gosh_main/base.html' %}
+{% load static humanize %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-inner">
+        <div class="hero-text-overlay">
+            <h1 class="hero-title">Welcome to Goshen Giant Food</h1>
+            <p class="hero-tagline">Celebrating African Foods, Naturally.</p>
+            <a href="{% url 'gosh_main:shop' %}" class="carousel-cta">SHOP NOW</a>
+        </div>
+        
+        <div class="carousel" id="heroCarousel">
+            <div class="slides">
+                <img src="{% static 'gosh_main/images/goshen_carousel_1.jpg' %}" alt="slide 1">
+                <img src="{% static 'gosh_main/images/goshen_carousel_2.jpg' %}" alt="slide 2">
+                <img src="{% static 'gosh_main/images/goshen_carousel_3.jpg' %}" alt="slide 3">
+            </div>
+            <div class="controls">
+                <button id="prevBtn" aria-label="Previous">‹</button>
+                <button id="nextBtn" aria-label="Next">›</button>
+            </div>
+            <div class="dots" id="carouselDots"></div>
+        </div>
+    </div>
+</section>
+
+<!-- Company Intro -->
+<section class="intro-section">
+    <div class="intro-content">
+        <div class="section-icon">🌾</div>
+        <h2 class="section-title">Feeding Africa. Exporting Her Richness.</h2>
+        <p>Goshen Giant Food Limited is a proudly Nigerian agro-processing company producing a wide range of culturally-rooted and export-compliant food products under the <strong>Naturis Giant</strong> brand. From dried seafood and native vegetables to plant-milk beverages and all-natural flours, we're committed to quality, sustainability, and food security across Nigeria and beyond.</p>
+        <p>With advanced facilities in Uyo, Akwa Ibom State, and a distribution network reaching North America, Europe, and West Africa, we bridge tradition with innovation to deliver safe, nutritious, and affordable food to every table.</p>
+    </div>
+</section>
+
+<!-- Features with Icons and Hover Effects -->
+<section class="features">
+    <h2 class="section-title centered">Why Choose Goshen?</h2>
+    <div class="grid">
+        <div class="card feature-card">
+            <div class="card-icon">✓</div>
+            <h3>100% Natural Ingredients</h3>
+            <p>We use only naturally grown and responsibly sourced ingredients—free from artificial preservatives, additives, and GMOs. What you see is what you eat.</p>
+        </div>
+        <div class="card feature-card">
+            <div class="card-icon">🇳🇬</div>
+            <h3>Proudly African, Globally Trusted</h3>
+            <p>Rooted in Africa, reaching the world. Our products bring the rich taste of African heritage to homes across Nigeria, the diaspora, and beyond.</p>
+        </div>
+        <div class="card feature-card">
+            <div class="card-icon">🚛</div>
+            <h3>Reliable Nationwide & International Delivery</h3>
+            <p>We deliver across Nigeria and ship to the USA, UK, Canada, and beyond. Whether retail or wholesale, we get your order to your doorstep—fast and fresh.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats-section">
+    <div class="stats-grid">
+        <div class="stat-item">
+            <div class="stat-number">500+</div>
+            <div class="stat-label">Products</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">10K+</div>
+            <div class="stat-label">Happy Customers</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">3</div>
+            <div class="stat-label">Continents</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">24/7</div>
+            <div class="stat-label">Support</div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Products Carousel -->
+<section class="featured-products">
+    <h2 class="section-title centered">Bestselling Products</h2>
+    
+    <div class="product-carousel-wrapper">
+        <button class="product-carousel-btn prev" id="productPrevBtn" aria-label="Previous products">◀</button>
+        
+        <div class="product-carousel-container" id="productCarousel">
+            <div class="product-carousel-track">
+                {% for p in featured_products %}
+                <div class="product-carousel-card">
+                    <div class="product-carousel-image">
+                        {% if p.image_url %}
+                            <img src="{{ p.image_url }}" alt="{{ p.name }}">
+                        {% else %}
+                            <img src="{% static 'gosh_main/images/Feature_1.jpg' %}" alt="{{ p.name }}">
+                        {% endif %}
+                        {% if p.is_new %}
+                            <div class="product-badge">New</div>
+                        {% elif p.on_sale %}
+                            <div class="product-badge sale">Sale</div>
+                        {% endif %}
+                    </div>
+                    <div class="product-carousel-info">
+                        <h3>{{ p.name }}</h3>
+                        <div class="product-rating">
+                            <span class="stars">⭐⭐⭐⭐⭐</span>
+                        </div>
+                        <p class="product-price">₦{{ p.price|intcomma }} {% if p.price_usd %}<span class="price-usd">/ ${{ p.price_usd }}</span>{% endif %}</p>
+                        <div class="product-actions">
+                            <form method="post" action="{% url 'gosh_main:add_to_cart' p.id %}" style="display:inline-block">
+                                {% csrf_token %}
+                                <input type="hidden" name="product_id" value="{{ p.id }}">
+                                <button type="submit" class="btn-add-cart">🛒 Add to Cart</button>
+                            </form>
+                            <a href="{% url 'gosh_main:product_detail' p.id %}" class="btn-view-details">🔍</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <button class="product-carousel-btn next" id="productNextBtn" aria-label="Next products">▶</button>
+    </div>
+    
+    <div class="centered-cta">
+        <a href="{% url 'gosh_main:shop' %}" class="btn-primary-large">View All Products</a>
+    </div>
+</section>
+
+<section class="reviews-section">
+    <div class="reviews-header">
+        <div class="section-icon">💬</div>
+        <h2 class="section-title centered">What Our Customers Are Saying</h2>
+        <p class="reviews-subtitle">Real feedback from real people who love Naturis Giant products.</p>
+    </div>
+
+    <div class="reviews-carousel-wrapper">
+        <button class="review-carousel-btn prev" id="reviewPrevBtn" aria-label="Previous review">◀</button>
+        
+        <div class="reviews-carousel-container">
+            <div class="reviews-carousel-track" id="reviewsTrack">
+                <!-- Review 1 -->
+                <div class="review-card">
+                    <div class="review-stars">⭐⭐⭐⭐⭐</div>
+                    <h3 class="review-title">"Naturis Giant has brought the true taste of home to my kitchen in Chicago!"</h3>
+                    <p class="review-text">I haven't had dried Ukazi this fresh and flavorful in years. Their packaging is clean, and delivery was fast. Highly recommended for Nigerians in the diaspora.</p>
+                    <div class="review-author">
+                        <div class="author-avatar">C</div>
+                        <div class="author-info">
+                            <p class="author-name">Chinyere N.</p>
+                            <p class="author-location">🇺🇸 USA</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Review 2 -->
+                <div class="review-card">
+                    <div class="review-stars">⭐⭐⭐⭐⭐</div>
+                    <h3 class="review-title">"The tigernut milk is simply divine."</h3>
+                    <p class="review-text">Sweet, smooth, and creamy—just the way I love it. No artificial taste. It's now my go-to drink after workouts.</p>
+                    <div class="review-author">
+                        <div class="author-avatar">D</div>
+                        <div class="author-info">
+                            <p class="author-name">David O.</p>
+                            <p class="author-location">🇳🇬 Lagos</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Review 3 -->
+                <div class="review-card">
+                    <div class="review-stars">⭐⭐⭐⭐⭐</div>
+                    <h3 class="review-title">"Top-quality smoked catfish with zero sand."</h3>
+                    <p class="review-text">I've tried others, but Naturis Giant's smoked catfish is the cleanest and tastiest by far. My customers love it in our restaurant soups.</p>
+                    <div class="review-author">
+                        <div class="author-avatar">M</div>
+                        <div class="author-info">
+                            <p class="author-name">Chef Mary A.</p>
+                            <p class="author-location">🇳🇬 Abuja</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Review 4 -->
+                <div class="review-card">
+                    <div class="review-stars">⭐⭐⭐⭐⭐</div>
+                    <h3 class="review-title">"They are reliable and professional."</h3>
+                    <p class="review-text">From placing my bulk order to getting timely delivery, Naturis Giant exceeded expectations. And their red palm oil has that rich traditional flavor.</p>
+                    <div class="review-author">
+                        <div class="author-avatar">U</div>
+                        <div class="author-info">
+                            <p class="author-name">Mrs. Uwem E.</p>
+                            <p class="author-location">🇳🇬 Uyo</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Review 5 -->
+                <div class="review-card">
+                    <div class="review-stars">⭐⭐⭐⭐⭐</div>
+                    <h3 class="review-title">"Affordable and authentic."</h3>
+                    <p class="review-text">Their egusi, ogbono, and spices remind me of my grandma's cooking. Best part? The prices are reasonable and the packaging is excellent.</p>
+                    <div class="review-author">
+                        <div class="author-avatar">T</div>
+                        <div class="author-info">
+                            <p class="author-name">Tunde A.</p>
+                            <p class="author-location">🇬🇧 UK</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <button class="review-carousel-btn next" id="reviewNextBtn" aria-label="Next review">▶</button>
+    </div>
+
+    <div class="reviews-cta">
+        <p class="reviews-cta-text">💚 Join thousands of satisfied customers enjoying Naturis Giant's natural African products.</p>
+        <div class="reviews-action-buttons">
+            <a href="{% url 'gosh_main:shop' %}" role="button" class="btn-review-action secondary">👉 Shop Now</a>
+            <a href="{% url 'gosh_main:contact' %}" role="button" class="btn-review-action secondary">👉 Leave a Review</a>
+            <a href="{% url 'gosh_main:contact' %}" role="button" class="btn-review-action secondary">👉 Contact Us</a>
+        </div>
+    </div>
+</section>
+
+<script>
+    // Carousel Script 
+    (function(){
+        const carousel = document.getElementById('heroCarousel');
+        if (!carousel) return;
+        
+        const slides = carousel.querySelectorAll('.slides img');
+        const dotsContainer = document.getElementById('carouselDots');
+        let index = 0;
+        const total = slides.length;
+        
+        for (let i = 0; i < total; i++){
+            const d = document.createElement('div');
+            d.className = 'dot' + (i === 0 ? ' active' : '');
+            d.dataset.i = i;
+            d.addEventListener('click', () => {
+                show(i);
+                restartTimer();
+            });
+            dotsContainer.appendChild(d);
+        }
+        
+        function show(i){
+            const slidesEl = carousel.querySelector('.slides');
+            slidesEl.style.transform = `translateX(${-i * 100}%)`;
+            const dots = dotsContainer.querySelectorAll('.dot');
+            dots.forEach((d, idx) => d.classList.toggle('active', idx === i));
+            index = i;
+        }
+        
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        let timer;
+        
+        function restartTimer(){
+            clearInterval(timer);
+            timer = setInterval(() => show((index + 1) % total), 4000);
+        }
+        
+        prevBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            show((index - 1 + total) % total);
+            restartTimer();
+        });
+        
+        nextBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            show((index + 1) % total);
+            restartTimer();
+        });
+        
+        timer = setInterval(() => show((index + 1) % total), 4000);
+        
+        carousel.addEventListener('mouseenter', () => clearInterval(timer));
+        carousel.addEventListener('mouseleave', () => restartTimer());
+    })();
+
+    // Scroll animations
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('fade-in');
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('.feature-card, .stat-item, .product-card').forEach(el => {
+        observer.observe(el);
+    });
+
+    // Horizontal carousels (products + reviews): loop arrows + manual scrolling
+    (function(){
+        function setupLoopingScrollableCarousel(config) {
+            const container = document.querySelector(config.containerSelector);
+            const track = document.querySelector(config.trackSelector);
+            const prevBtn = document.getElementById(config.prevBtnId);
+            const nextBtn = document.getElementById(config.nextBtnId);
+
+            if (!container || !track || !prevBtn || !nextBtn) return;
+
+            function getStep() {
+                const firstCard = track.querySelector(config.cardSelector);
+                if (!firstCard) return Math.max(240, container.clientWidth * 0.8);
+
+                const cardWidth = firstCard.getBoundingClientRect().width;
+                const style = window.getComputedStyle(track);
+                const gap = parseFloat(style.columnGap || style.gap || '0') || 0;
+                return cardWidth + gap;
+            }
+
+            function maxScrollLeft() {
+                return Math.max(0, container.scrollWidth - container.clientWidth);
+            }
+
+            function atStart() {
+                return container.scrollLeft <= 2;
+            }
+
+            function atEnd() {
+                return container.scrollLeft >= maxScrollLeft() - 2;
+            }
+
+            prevBtn.addEventListener('click', function() {
+                if (atStart()) {
+                    container.scrollTo({ left: maxScrollLeft(), behavior: 'smooth' });
+                    return;
+                }
+                container.scrollBy({ left: -getStep(), behavior: 'smooth' });
+            });
+
+            nextBtn.addEventListener('click', function() {
+                if (atEnd()) {
+                    container.scrollTo({ left: 0, behavior: 'smooth' });
+                    return;
+                }
+                container.scrollBy({ left: getStep(), behavior: 'smooth' });
+            });
+
+            container.addEventListener('wheel', function(event) {
+                if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
+                    event.preventDefault();
+                    container.scrollBy({ left: event.deltaY, behavior: 'auto' });
+                }
+            }, { passive: false });
+        }
+
+        setupLoopingScrollableCarousel({
+            containerSelector: '.product-carousel-container',
+            trackSelector: '.product-carousel-track',
+            cardSelector: '.product-carousel-card',
+            prevBtnId: 'productPrevBtn',
+            nextBtnId: 'productNextBtn'
+        });
+
+        setupLoopingScrollableCarousel({
+            containerSelector: '.reviews-carousel-container',
+            trackSelector: '.reviews-carousel-track',
+            cardSelector: '.review-card',
+            prevBtnId: 'reviewPrevBtn',
+            nextBtnId: 'reviewNextBtn'
+        });
+    })();
+</script>
+{% endblock %}

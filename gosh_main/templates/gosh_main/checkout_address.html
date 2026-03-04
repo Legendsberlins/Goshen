@@ -1,0 +1,84 @@
+{% extends 'gosh_main/base.html' %}
+{% load static %}
+
+{% block title %}Checkout - Address{% endblock %}
+
+{% block content %}
+<section class="checkout-address container">
+    <h2>Checkout — Delivery Address</h2>
+
+    {% if saved_addresses %}
+        <div class="saved-addresses">
+            <h3>Your saved addresses</h3>
+            <div class="address-list">
+                {% for a in saved_addresses %}
+                <label class="address-card">
+                    <input type="radio" name="use_saved" value="{{ a.id }}" {% if forloop.first %}checked{% endif %}>
+                    <div class="address-body">
+                        <strong>{{ a.label }}</strong>
+                        <div>{{ a.recipient_name }}</div>
+                        <div>{{ a.address_line }}</div>
+                        <div>{{ a.city }} {{ a.state }}</div>
+                        <div>{{ a.phone }}</div>
+                    </div>
+                </label>
+                {% endfor %}
+            </div>
+            <hr>
+        </div>
+    {% endif %}
+
+    <form method="post" class="checkout-form">
+        {% csrf_token %}
+        <div class="form-grid">
+            <div>
+                <label>Label</label>
+                <input name="label" class="input">
+
+                <label>Recipient name</label>
+                <input name="recipient_name" required class="input">
+
+                <label>Phone</label>
+                <input name="phone" required class="input">
+            </div>
+
+            <div>
+                <label>Address</label>
+                <textarea name="address_line" required class="input input-multiline"></textarea>
+
+                <label>City</label>
+                <input name="city" class="input">
+
+                <label>State</label>
+                <input name="state" class="input">
+
+                <label>Country</label>
+                <input name="country" value="Nigeria" class="input">
+            </div>
+        </div>
+
+        {% if user.is_authenticated and not user.is_superuser %}
+            <label class="save-address"><input type="checkbox" name="save_address"> Save this address to my account</label>
+        {% endif %}
+
+        <div class="actions">
+            <button class="btn-primary-large" type="submit">Continue to Payment</button>
+            <a href="{% url 'gosh_main:cart' %}" class="btn-secondary">Back to Cart</a>
+        </div>
+    </form>
+</section>
+
+<style>
+    .checkout-address .address-list { display:flex; flex-direction:column; gap:.5rem; }
+    .address-card { display:flex; gap:.6rem; align-items:flex-start; border:1px solid #eee; padding:.6rem; border-radius:8px; }
+    .address-card input { margin-top:6px; }
+    .address-body { font-size:.95rem; color:#333 }
+    .checkout-form .form-grid { display:grid; grid-template-columns: 1fr 1fr; gap:1rem; }
+    .checkout-form .input { width:100%; padding:.5rem; border:1px solid #ddd; border-radius:6px; }
+    .checkout-form .input-multiline { min-height:100px; resize:vertical }
+    .checkout-address .actions { margin-top:1rem; display:flex; gap:.5rem; }
+    .save-address { display:block; margin-top:.6rem }
+    @media (max-width:720px){ .checkout-form .form-grid { grid-template-columns:1fr } }
+</style>
+
+{% endblock %}

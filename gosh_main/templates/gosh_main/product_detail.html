@@ -1,0 +1,50 @@
+{% extends 'gosh_main/base.html' %}
+{% load static humanize %}
+
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block content %}
+<section class="product-detail-section">
+    <div class="product-detail-container">
+        <!-- Product Image -->
+        <div class="product-detail-image">
+            {% if product.image_url %}
+                <img src="{{ product.image_url }}" alt="{{ product.name }}">
+            {% else %}
+                <img src="{% static 'gosh_main/images/Feature_1.jpg' %}" alt="{{ product.name }}">
+            {% endif %}
+        </div>
+
+        <!-- Product Info -->
+        <div class="product-detail-info">
+            <h1>{{ product.name }}</h1>
+            
+            {% if product.is_new %}
+                <span class="product-badge new">New</span>
+            {% elif product.on_sale %}
+                <span class="product-badge sale">Sale</span>
+            {% endif %}
+
+            <div class="product-detail-price">
+                <span class="current-price">₦{{ product.price|intcomma }}</span>
+                {% if product.price_usd %}
+                    <span class="price-usd-small">/ ${{ product.price_usd }}</span>
+                {% endif %}
+            </div>
+
+            <p class="product-full-description">
+                {{ product.description|default:"Premium quality African food product prepared with care." }}
+            </p>
+
+            <div class="product-detail-actions">
+                <form method="post" action="{% url 'gosh_main:add_to_cart' product.id %}" class="product-detail-cart-form">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-primary-large">🛒 Add to Cart</button>
+                </form>
+
+                <a href="{% url 'gosh_main:shop' %}" class="btn-secondary">← Back to Shop</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

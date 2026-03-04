@@ -1,0 +1,193 @@
+{% extends 'gosh_main/base.html' %}
+{% load static %}
+
+{% block title %}Create Order - Goshen Giant Food{% endblock %}
+
+{% block content %}
+<div class="create-order-container">
+    <h1>Create Test Order</h1>
+    <p>Create a sample restaurant order to test the real-time tracker</p>
+
+    <form id="orderForm" class="order-form">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="items">Order Items (JSON format)</label>
+            <textarea 
+                id="items" 
+                name="items" 
+                rows="8" 
+                placeholder='{"Rice": "2 plates", "Chicken": "1 portion", "Drink": "Coke"}'
+                required
+            >{
+  "Rice": "2 plates",
+  "Chicken": "1 portion", 
+  "Drink": "Coke"
+}</textarea>
+            <small>Enter order items as JSON</small>
+        </div>
+
+        <button type="submit" class="btn-submit">Create Order</button>
+        <a href="{% url 'gosh_main:order_tracker' %}" class="btn-secondary">View Order Tracker</a>
+    </form>
+
+    <div id="message" class="message"></div>
+</div>
+
+<style>
+    .create-order-container {
+        max-width: 600px;
+        margin: 60px auto;
+        padding: 40px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .create-order-container h1 {
+        color: #2d5016;
+        margin-bottom: 10px;
+    }
+
+    .create-order-container p {
+        color: #666;
+        margin-bottom: 30px;
+    }
+
+    .order-form {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .form-group label {
+        font-weight: 600;
+        color: #374151;
+    }
+
+    .form-group textarea {
+        padding: 12px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        resize: vertical;
+    }
+
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #2d5016;
+    }
+
+    .form-group small {
+        color: #6b7280;
+        font-size: 13px;
+    }
+
+    .btn-submit, .btn-secondary {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-submit {
+        background: #2d5016;
+        color: white;
+    }
+
+    .btn-submit:hover {
+        background: #1f3810;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(45, 80, 22, 0.3);
+    }
+
+    .btn-secondary {
+        background: #f3f4f6;
+        color: #374151;
+    }
+
+    .btn-secondary:hover {
+        background: #e5e7eb;
+    }
+
+    .message {
+        margin-top: 20px;
+        padding: 12px;
+        border-radius: 8px;
+        display: none;
+    }
+
+    .message.success {
+        display: block;
+        background: #d1fae5;
+        color: #065f46;
+        border: 1px solid #6ee7b7;
+    }
+
+    .message.error {
+        display: block;
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fca5a5;
+    }
+</style>
+
+<script>
+    document.getElementById('orderForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const messageDiv = document.getElementById('message');
+        
+        try {
+            const response = await fetch('{% url "gosh_main:create_order" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                messageDiv.className = 'message success';
+                messageDiv.textContent = `✓ Order #${data.order_id} created successfully! Check the tracker.`;
+                
+                // Reset form
+                document.getElementById('items').value = `{
+  "Rice": "2 plates",
+  "Chicken": "1 portion", 
+  "Drink": "Coke"
+}`;
+                
+                // Auto-hide message after 5 seconds
+                setTimeout(() => {
+                    messageDiv.style.display = 'none';
+                }, 5000);
+            } else {
+                messageDiv.className = 'message error';
+                messageDiv.textContent = '✗ Failed to create order';
+            }
+        } catch (error) {
+            messageDiv.className = 'message error';
+            messageDiv.textContent = '✗ Error: ' + error.message;
+        }
+    });
+</script>
+{% endblock %}
+
+

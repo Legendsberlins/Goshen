@@ -1,0 +1,47 @@
+{% extends 'gosh_main/base.html' %}
+{% load static humanize %}
+
+{% block title %}Payment Cancelled{% endblock %}
+
+{% block content %}
+<section class="payment-cancel container">
+    <h2>Payment Cancelled</h2>
+
+    {% if order %}
+    <div class="cancel-message" style="background:#fff3e0;padding:1.5rem;border-radius:8px;margin:1rem 0;">
+        <p style="font-size:1.1rem;margin:0;">Your payment was cancelled.</p>
+        <p style="margin:0.5rem 0 0 0;">Order number: <strong>{{ order.order_number }}</strong></p>
+        <p style="margin:0.5rem 0 0 0;font-size:0.9rem;">Don't worry - your order has been saved. You can complete payment anytime.</p>
+    </div>
+
+    <div class="order-summary" style="background:#f5f5f5;padding:1rem;border-radius:8px;margin:1rem 0;">
+        <h3>Your Order</h3>
+        <ul>
+        {% for item in order.items.all %}
+            <li>{{ item.product_name }} x{{ item.quantity }} — ₦{{ item.line_total|floatformat:2|intcomma }}</li>
+        {% endfor %}
+        </ul>
+        <p style="border-top:1px solid #ddd;padding-top:0.5rem;margin-top:0.5rem;">
+            <strong>Total:</strong> ₦{{ order.total|floatformat:2|intcomma }}
+        </p>
+    </div>
+
+    <div class="actions" style="margin-top:1.5rem;">
+        <a href="{% url 'gosh_main:checkout_payment' %}" class="btn-primary">Try Again</a>
+        <a href="{% url 'gosh_main:cart' %}" class="btn-secondary">Back to Cart</a>
+    </div>
+
+    {% else %}
+    <p>Your payment was cancelled. You can return to your cart to try again.</p>
+    <div class="actions" style="margin-top:1.5rem;">
+        <a href="{% url 'gosh_main:cart' %}" class="btn-primary">Back to Cart</a>
+    </div>
+    {% endif %}
+</section>
+
+<style>
+.payment-cancel { text-align:center; padding:2rem 0; max-width:600px; margin:0 auto; }
+.payment-cancel .order-summary { text-align:left; }
+</style>
+
+{% endblock %}

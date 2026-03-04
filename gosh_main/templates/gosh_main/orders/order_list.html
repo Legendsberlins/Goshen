@@ -1,0 +1,425 @@
+{% extends 'gosh_main/base.html' %}
+{% load static %}
+
+{% block title %}Live Order Tracker - Goshen Giant Food{% endblock %}
+
+{% block content %}
+<div class="order-tracker-container">
+    <div class="tracker-header">
+        <h1>🍽️ Live Order Tracker</h1>
+        <p>Real-time restaurant orders • Updates automatically</p>
+        <div class="connection-status">
+            <span class="status-indicator" id="connectionStatus">●</span>
+            <span id="connectionText">Connecting...</span>
+        </div>
+    </div>
+
+    <div class="orders-grid" id="ordersContainer">
+        <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Loading orders...</p>
+        </div>
+    </div>
+</div>
+
+<style>
+    .order-tracker-container {
+        max-width: 1200px;
+        margin: 40px auto;
+        padding: 20px;
+    }
+
+    .tracker-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .tracker-header h1 {
+        color: #2d5016;
+        margin-bottom: 10px;
+    }
+
+    .tracker-header p {
+        color: #666;
+        margin-bottom: 20px;
+    }
+
+    .connection-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        background: #f5f5f5;
+        border-radius: 20px;
+        font-size: 14px;
+    }
+
+    .status-indicator {
+        font-size: 12px;
+        animation: pulse 2s infinite;
+    }
+
+    .status-indicator.connected {
+        color: #22c55e;
+        animation: none;
+    }
+
+    .status-indicator.disconnected {
+        color: #ef4444;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    .orders-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 20px;
+        min-height: 200px;
+    }
+
+    .loading-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 60px 20px;
+        color: #666;
+    }
+
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #2d5016;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .order-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        animation: slideIn 0.3s ease;
+    }
+
+    .order-card.new-order {
+        animation: newOrderPulse 0.6s ease;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes newOrderPulse {
+        0%, 100% {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        50% {
+            box-shadow: 0 0 20px rgba(45, 80, 22, 0.4);
+            transform: scale(1.02);
+        }
+    }
+
+    .order-card:hover {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        transform: translateY(-2px);
+    }
+
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+
+    .order-id {
+        font-size: 18px;
+        font-weight: 700;
+        color: #2d5016;
+    }
+
+    .order-status {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .status-pending {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .status-preparing {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .status-ready {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-delivered {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    .order-meta {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 15px;
+        font-size: 13px;
+        color: #666;
+    }
+
+    .order-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .order-items {
+        background: #f9fafb;
+        padding: 12px;
+        border-radius: 8px;
+        margin-top: 12px;
+    }
+
+    .order-items-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+    }
+
+    .order-items-list {
+        font-size: 14px;
+        color: #4b5563;
+        line-height: 1.6;
+    }
+
+    .empty-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 60px 20px;
+        color: #666;
+    }
+
+    .empty-state-icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+    }
+
+    @media (max-width: 768px) {
+        .orders-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<script>
+    let ws = null;
+    let reconnectInterval = null;
+
+    function connectWebSocket() {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws/orders/`;
+        
+        console.log('Connecting to WebSocket:', wsUrl);
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = function(e) {
+            console.log('WebSocket connected');
+            updateConnectionStatus(true);
+            if (reconnectInterval) {
+                clearInterval(reconnectInterval);
+                reconnectInterval = null;
+            }
+        };
+
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            console.log('Received:', data);
+
+            if (data.type === 'order_list') {
+                // Initial load of all orders
+                displayOrders(data.orders);
+            } else if (data.type === 'order_created') {
+                // New order added
+                addNewOrder(data.order);
+            } else if (data.type === 'order_update') {
+                // Existing order updated
+                updateOrder(data.order);
+            }
+        };
+
+        ws.onerror = function(error) {
+            console.error('WebSocket error:', error);
+            updateConnectionStatus(false);
+        };
+
+        ws.onclose = function(e) {
+            console.log('WebSocket closed');
+            updateConnectionStatus(false);
+            
+            // Attempt to reconnect every 3 seconds
+            if (!reconnectInterval) {
+                reconnectInterval = setInterval(() => {
+                    console.log('Attempting to reconnect...');
+                    connectWebSocket();
+                }, 3000);
+            }
+        };
+    }
+
+    function updateConnectionStatus(connected) {
+        const indicator = document.getElementById('connectionStatus');
+        const text = document.getElementById('connectionText');
+        
+        if (connected) {
+            indicator.classList.add('connected');
+            indicator.classList.remove('disconnected');
+            text.textContent = 'Connected';
+        } else {
+            indicator.classList.remove('connected');
+            indicator.classList.add('disconnected');
+            text.textContent = 'Disconnected';
+        }
+    }
+
+    function displayOrders(orders) {
+        const container = document.getElementById('ordersContainer');
+        
+        if (orders.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">🍽️</div>
+                    <h3>No orders yet</h3>
+                    <p>New orders will appear here in real-time</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = orders.map(order => createOrderCard(order)).join('');
+    }
+
+    function createOrderCard(order) {
+        const date = new Date(order.created_at);
+        const timeStr = date.toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+
+        const itemsHtml = typeof order.items === 'object' 
+            ? Object.entries(order.items)
+                .map(([key, value]) => `<div>${key}: ${value}</div>`)
+                .join('')
+            : `<div>${JSON.stringify(order.items)}</div>`;
+
+        return `
+            <div class="order-card" id="order-${order.id}">
+                <div class="order-header">
+                    <div class="order-id">Order #${order.id}</div>
+                    <div class="order-status status-${order.status}">
+                        ${order.status}
+                    </div>
+                </div>
+                <div class="order-meta">
+                    <div class="order-meta-item">
+                        👤 ${order.user}
+                    </div>
+                    <div class="order-meta-item">
+                        🕐 ${timeStr}
+                    </div>
+                </div>
+                <div class="order-items">
+                    <div class="order-items-title">Order Items:</div>
+                    <div class="order-items-list">${itemsHtml}</div>
+                </div>
+            </div>
+        `;
+    }
+
+    function addNewOrder(order) {
+        const container = document.getElementById('ordersContainer');
+        
+        // Remove empty state if present
+        const emptyState = container.querySelector('.empty-state');
+        if (emptyState) {
+            container.innerHTML = '';
+        }
+
+        // Add new order at the top with animation
+        const orderHtml = createOrderCard(order);
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = orderHtml;
+        const orderCard = tempDiv.firstElementChild;
+        orderCard.classList.add('new-order');
+        
+        container.insertBefore(orderCard, container.firstChild);
+
+        // Play notification sound (optional)
+        playNotificationSound();
+    }
+
+    function updateOrder(order) {
+        const orderCard = document.getElementById(`order-${order.id}`);
+        if (orderCard) {
+            // Update the entire card with new data
+            const newCard = createOrderCard(order);
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = newCard;
+            orderCard.replaceWith(tempDiv.firstElementChild);
+            
+            // Add pulse animation
+            const updatedCard = document.getElementById(`order-${order.id}`);
+            updatedCard.classList.add('new-order');
+            setTimeout(() => {
+                updatedCard.classList.remove('new-order');
+            }, 600);
+        }
+    }
+
+    function playNotificationSound() {
+        // Optional: Add a notification sound
+        // const audio = new Audio('/static/gosh_main/sounds/notification.mp3');
+        // audio.play().catch(e => console.log('Could not play sound'));
+    }
+
+    // Connect when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        connectWebSocket();
+    });
+
+    // Clean up on page unload
+    window.addEventListener('beforeunload', function() {
+        if (ws) {
+            ws.close();
+        }
+        if (reconnectInterval) {
+            clearInterval(reconnectInterval);
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends 'gosh_main/base.html' %}
+
+{% block title %}Sign Up{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+  <div class="auth-card">
+    <h2>Create an account</h2>
+    {% if message %}
+      <div class="alert">{{ message }}</div>
+    {% endif %}
+
+    <form method="post" action="{% url 'gosh_main:register' %}" class="email-signup">
+      {% csrf_token %}
+      <label for="first_name">First name</label>
+      <input id="first_name" name="first_name" type="text" value="{{ form_data.first_name|default:'' }}" required>
+
+      <label for="last_name">Last name</label>
+      <input id="last_name" name="last_name" type="text" value="{{ form_data.last_name|default:'' }}" required>
+
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" value="{{ form_data.email|default:'' }}" required>
+
+      <label for="username">Username</label>
+      <input id="username" name="username" type="text" value="{{ form_data.username|default:'' }}" required>
+
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" required>
+
+      <label for="confirmation">Confirm password</label>
+      <input id="confirmation" name="confirmation" type="password" required>
+
+      <button type="submit" class="btn-primary-large">Sign Up</button>
+    </form>
+
+    <p class="small">Already have an account? <a href="{% url 'gosh_main:login' %}">Sign in</a></p>
+  </div>
+</section>
+{% endblock %}

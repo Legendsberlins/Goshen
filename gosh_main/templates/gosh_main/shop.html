@@ -1,0 +1,113 @@
+{% extends 'gosh_main/base.html' %}
+{% load static humanize %}
+
+{% block title %}Shop{% endblock %}
+
+{% block content %}
+<section class="shop-section">
+    <!-- Shop Header -->
+    <div class="shop-header">
+        <h2 class="section-title centered">
+            🛒 {{ current_category_name }}
+        </h2>
+        <p class="shop-subtitle">Browse our selection of authentic African foods</p>
+    </div>
+
+    <!-- Category Filter Pills -->
+    <div class="category-filter">
+        <a href="{% url 'gosh_main:shop' %}" 
+           class="filter-pill {% if not current_category or current_category == 'all' %}active{% endif %}">
+            All Products
+        </a>
+        {% for category in categories %}
+        <a href="{% url 'gosh_main:shop' %}?cat={{ category.slug }}" 
+           class="filter-pill {% if current_category == category.slug %}active{% endif %}">
+            {{ category.name }}
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Products Grid -->
+    <div class="products-grid">
+        {% if page_obj and page_obj.object_list %}
+            {% for product in page_obj.object_list %}
+                <article class="shop-product-card">
+                    <!-- Product Image -->
+                    <div class="shop-product-image">
+                        {% if product.image_url %}
+                            <img src="{{ product.image_url }}" alt="{{ product.name }}">
+                        {% else %}
+                            <div class="image-placeholder">
+                                <span class="placeholder-icon">📦</span>
+                                <span class="placeholder-text">No Image</span>
+                            </div>
+                        {% endif %}
+                        {% if product.is_new %}
+                            <span class="product-badge new">New</span>
+                        {% elif product.on_sale %}
+                            <span class="product-badge sale">Sale</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Product Info -->
+                    <div class="shop-product-info">
+                        <h3 class="product-name">{{ product.name }}</h3>
+                        <p class="product-description">{{ product.description|default:"Premium quality African food product"|truncatewords:15 }}</p>
+                        
+                        <!-- Product Rating (if available) -->
+                        {% if product.rating %}
+                            <div class="product-rating-small">
+                                <span class="stars-small">⭐⭐⭐⭐⭐</span>
+                                <span class="rating-count-small">({{ product.review_count|default:0 }})</span>
+                            </div>
+                        {% endif %}
+
+                        <!-- Price -->
+                        <div class="product-price-section">
+                            {% if product.old_price %}
+                                <span class="old-price">₦{{ product.old_price|intcomma }}</span>
+                            {% endif %}
+                            <span class="current-price">₦{{ product.price|default:"0.00"|intcomma }}</span>
+                            {% if product.price_usd %}
+                                <span class="price-usd-small">/ ${{ product.price_usd }}</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="shop-product-actions">
+                            <form method="post" action="{% url 'gosh_main:add_to_cart' product.id %}" class="add-cart-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="product_id" value="{{ product.id }}">
+                                <button type="submit" class="btn-add-to-cart">🛒 Add to Cart</button>
+                            </form>
+                        </div>
+                    </div>
+                </article>
+            {% endfor %}
+        {% else %}
+            <!-- Empty State -->
+            <div class="empty-state">
+                <div class="empty-icon">📦</div>
+                <h3>No Products Found</h3>
+                <p>We don't have any products in this category yet. Check back soon!</p>
+                <a href="{% url 'gosh_main:shop' %}" class="btn-primary-large">View All Products</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Pagination (if you implement it later) -->
+    {% if page_obj and page_obj.has_other_pages %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% if current_category %}&cat={{ current_category }}{% endif %}" class="page-link">← Previous</a>
+            {% endif %}
+
+            <span class="page-info">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if current_category %}&cat={{ current_category }}{% endif %}" class="page-link">Next →</a>
+            {% endif %}
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

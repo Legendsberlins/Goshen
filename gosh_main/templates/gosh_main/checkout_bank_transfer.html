@@ -1,0 +1,76 @@
+{% extends 'gosh_main/base.html' %}
+{% load static humanize %}
+
+{% block title %}Bank Transfer - Order {{ order.order_number }}{% endblock %}
+
+{% block content %}
+<section class="bank-transfer container">
+    <h2>Complete Your Payment</h2>
+
+    <div class="bank-info" style="background:#fff3e0;padding:1.5rem;border-radius:8px;margin:1rem 0;">
+        <h3>Bank Transfer Details</h3>
+        <p>Please transfer <strong>₦{{ order.total|floatformat:2|intcomma }}</strong> to:</p>
+        
+        <table style="margin:1rem 0;width:100%;max-width:400px;">
+            <tr><td style="padding:0.5rem 1rem 0.5rem 0;"><strong>Bank:</strong></td><td>{{ bank_details.bank_name }}</td></tr>
+            <tr><td style="padding:0.5rem 1rem 0.5rem 0;"><strong>Account Number:</strong></td><td><strong style="font-size:1.1rem;">{{ bank_details.account_number }}</strong></td></tr>
+            <tr><td style="padding:0.5rem 1rem 0.5rem 0;"><strong>Account Name:</strong></td><td>{{ bank_details.account_name }}</td></tr>
+        </table>
+        
+        <div style="background:#fff;border:2px dashed #f57c00;padding:1rem;margin:1rem 0;border-radius:4px;">
+            <p style="margin:0;"><strong>Payment Reference:</strong></p>
+            <p style="margin:0.3rem 0 0 0;font-size:1.2rem;font-weight:bold;color:#e65100;">{{ order.order_number }}</p>
+            <p style="margin:0.5rem 0 0 0;font-size:0.85rem;color:#666;"><em>Please use this as your transfer description/narration</em></p>
+        </div>
+        
+        <p style="margin-top:1rem;font-size:0.9rem;color:#666;">
+            ⚠️ <strong>Important:</strong> Include the payment reference in your transfer to help us identify your payment quickly.
+        </p>
+    </div>
+
+    <div class="order-summary" style="background:#f5f5f5;padding:1rem;border-radius:8px;margin:1rem 0;">
+        <h3>Order Summary</h3>
+        <p><strong>Order Number:</strong> {{ order.order_number }}</p>
+        
+        <h4>Items:</h4>
+        <ul>
+        {% for item in order.items.all %}
+            <li>{{ item.product_name }} x{{ item.quantity }} — ₦{{ item.line_total|floatformat:2|intcomma }}</li>
+        {% endfor %}
+        </ul>
+        
+        <p style="border-top:1px solid #ddd;padding-top:0.5rem;margin-top:0.5rem;">
+            <strong>Subtotal:</strong> ₦{{ order.subtotal|floatformat:2|intcomma }}<br>
+            <strong>Shipping:</strong> ₦{{ order.shipping_cost|floatformat:2|intcomma }}<br>
+            <strong style="font-size:1.1rem;">Total:</strong> <strong style="font-size:1.1rem;">₦{{ order.total|floatformat:2|intcomma }}</strong>
+        </p>
+        
+        <p style="margin-top:1rem;"><strong>Delivery Address:</strong><br>
+        {{ order.recipient_name }}<br>
+        {{ order.address_line }}<br>
+        {{ order.city }}{% if order.state %}, {{ order.state }}{% endif %}<br>
+        Phone: {{ order.phone }}</p>
+    </div>
+
+    <div style="margin-top:1.5rem;">
+        <p><strong>What happens next?</strong></p>
+        <ol style="text-align:left;display:inline-block;max-width:500px;">
+            <li>Make the transfer using the details above</li>
+            <li>We'll verify your payment (usually within 24 hours)</li>
+            <li>You'll receive an email confirmation once verified</li>
+            <li>Your order will be processed and shipped</li>
+        </ol>
+    </div>
+
+    <div class="actions" style="margin-top:2rem;">
+        <a href="{% url 'gosh_main:home' %}" class="btn-primary">Done</a>
+    </div>
+</section>
+
+<style>
+.bank-transfer { text-align:center; padding:2rem 0; max-width:700px; margin:0 auto; }
+.bank-transfer .order-summary { text-align:left; }
+.bank-transfer table { margin-left:auto; margin-right:auto; }
+</style>
+
+{% endblock %}

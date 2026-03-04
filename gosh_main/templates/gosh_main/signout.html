@@ -1,0 +1,12 @@
+{% extends 'gosh_main/base.html' %}
+
+{% block title %}Signed Out{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+  <div class="auth-card">
+    <h2>You have been signed out</h2>
+    <p>Thanks for visiting. <a href="{% url 'gosh_main:home' %}">Return to the homepage</a> or <a href="{% url 'gosh_main:login' %}">sign in</a> again.</p>
+  </div>
+</section>
+{% endblock %}

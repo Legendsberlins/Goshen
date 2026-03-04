@@ -1,0 +1,232 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Goshen - {% block title %}{% endblock %}</title>
+    <link rel="icon" type="image/jpeg" href="{% static 'gosh_main/images/goshen_logo.jpg' %}">
+    <link rel="shortcut icon" type="image/jpeg" href="{% static 'gosh_main/images/goshen_logo.jpg' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="{% static 'gosh_main/css/styles.css' %}">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <div class="header-left">
+                <!-- logo image -->
+                <img src="{% static 'gosh_main/images/goshen_logo.jpg' %}" alt="Goshen logo" class="nav-logo">
+                <a class="brand" href="{% url 'gosh_main:home' %}">Goshen Giant Food</a>
+            </div>
+            <nav class="main-nav" aria-label="Main navigation">
+                <!-- hamburger for small screens -->
+                <button id="navToggle" type="button" class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="navLinks">☰</button>
+                <div class="nav-links" id="navLinks">
+                    <a href="{% url 'gosh_main:home' %}" class="{% if page == 'home' %}active{% endif %}">Home</a>
+                    <a href="{% url 'gosh_main:about' %}" class="{% if page == 'about' %}active{% endif %}">About</a>
+                    <a href="{% url 'gosh_main:products' %}" class="{% if page == 'products' %}active{% endif %}">Products</a>
+                    <a href="{% url 'gosh_main:shop' %}" class="{% if page == 'shop' %}active{% endif %}">Shop</a>
+                    <a href="{% url 'gosh_main:cart' %}" class="nav-cart-link {% if page == 'cart' %}active{% endif %}">Cart{% if cart_count > 0 %}<span class="cart-count-badge">{{ cart_count }}</span>{% endif %}</a>
+                    <a href="{% url 'gosh_main:contact' %}" class="{% if page == 'contact' %}active{% endif %}">Contact</a>
+                    {% if user.is_authenticated and not user.is_superuser %}
+                        <a href="{% url 'gosh_main:logout' %}">Sign out</a>
+                    {% else %}
+                        <a href="{% url 'gosh_main:login' %}" class="{% if page == 'login' %}active{% endif %}">Sign in</a>
+                        <a href="{% url 'gosh_main:register' %}" class="{% if page == 'register' %}active{% endif %}">Sign up</a>
+                    {% endif %}
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        {% if messages %}
+            <div class="site-messages" role="status" aria-live="polite">
+                {% for message in messages %}
+                    <div class="alert{% if message.tags %} alert-{{ message.tags }}{% endif %}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <!-- Newsletter Section - Featured at Top -->
+            <div class="footer-newsletter-section">
+                <div class="newsletter-icon">📬</div>
+                <h3 class="newsletter-title">Join the Naturis Giant Family</h3>
+                <p class="newsletter-subtitle">Be the first to know about new products, special offers, and healthy African food tips!</p>
+                
+                <ul class="newsletter-benefits">
+                    <li>✅ Exclusive Discounts</li>
+                    <li>✅ Early Access to New Launches</li>
+                    <li>✅ Recipes, Health Tips & More</li>
+                </ul>
+
+                <form id="newsletterForm" class="newsletter-form" data-subscribe-url="{% url 'gosh_main:newsletter_subscribe' %}">
+                    {% csrf_token %}
+                    <div class="newsletter-inputs">
+                        <input id="newsletterEmail" name="email" type="email" placeholder="Your email address" required aria-label="Email address">
+                        <button id="newsletterSubmit" class="btn-newsletter" type="submit">Subscribe</button>
+                    </div>
+                    <p class="newsletter-note">We respect your privacy. No spam, ever. Just pure goodness, once a month.</p>
+                </form>
+
+                <div class="social-links">
+                    <span class="social-label">Follow us:</span>
+                    <a href="https://www.instagram.com/naturisgiant" aria-label="Visit our Instagram page" target="_blank" rel="noopener noreferrer">📸 Instagram</a>
+                    <a href="https://www.facebook.com/NaturisGiantFoods" aria-label="Visit our Facebook page" target="_blank" rel="noopener noreferrer">📘 Facebook</a>
+                    <a href="https://wa.me/2347057025093" aria-label="Contact us on WhatsApp" target="_blank" rel="noopener noreferrer">📱 WhatsApp</a>
+                </div>
+            </div>
+
+            <!-- Footer Bottom Bar -->
+            <div class="footer-bottom">
+                <div class="footer-left">
+                    <p class="copy">© {{ now|default:"2026" }} Goshen Giant Food Limited. All rights reserved.</p>
+                    <p class="slogan">Naturis Giant — Authentic African Foods</p>
+                </div>
+                
+                <div class="footer-right">
+                    <nav class="footer-quicklinks" aria-label="Footer navigation">
+                        <a href="{% url 'gosh_main:home' %}">Home</a>
+                        <a href="{% url 'gosh_main:shop' %}">Shop</a>
+                        <a href="{% url 'gosh_main:about' %}">About</a>
+                        <a href="{% url 'gosh_main:contact' %}">Contact</a>
+                        <a href="{% url 'gosh_main:about' %}#faqs">FAQ</a>
+                        <a href="{% url 'gosh_main:terms' %}">Terms</a>
+                        <a href="{% url 'gosh_main:privacy' %}">Privacy</a>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <script>
+        // Nav toggle: simple, no-deps
+        (function(){
+            const btn = document.getElementById('navToggle');
+            const nav = document.querySelector('.main-nav');
+            const links = document.getElementById('navLinks');
+            
+            if (!btn || !nav || !links) return;
+            
+            function toggleNav(e){
+                e.stopPropagation();
+                const open = nav.classList.toggle('open');
+                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            }
+            
+            btn.addEventListener('click', toggleNav);
+            
+            // close when a link is clicked (mobile)
+            links.addEventListener('click', function(e){
+                if (e.target.tagName === 'A' && nav.classList.contains('open')) {
+                    nav.classList.remove('open');
+                    btn.setAttribute('aria-expanded', 'false');
+                }
+            });
+            
+            // close when clicking outside
+            document.addEventListener('click', function(e){
+                if (nav.classList.contains('open') && !nav.contains(e.target) && e.target !== btn){
+                    nav.classList.remove('open');
+                    btn.setAttribute('aria-expanded', 'false');
+                }
+            });
+        })();
+
+        // Newsletter form -> backend subscription endpoint
+        (function(){
+            const form = document.getElementById('newsletterForm');
+            const email = document.getElementById('newsletterEmail');
+            const submit = document.getElementById('newsletterSubmit');
+            if (!form || !email || !submit) return;
+
+            function getCookie(name) {
+                const cookies = document.cookie ? document.cookie.split('; ') : [];
+                for (let i = 0; i < cookies.length; i++) {
+                    const parts = cookies[i].split('=');
+                    const key = decodeURIComponent(parts[0]);
+                    if (key === name) {
+                        return decodeURIComponent(parts.slice(1).join('='));
+                    }
+                }
+                return null;
+            }
+
+            form.addEventListener('submit', async function(e){
+                e.preventDefault();
+                const value = email.value && email.value.trim();
+                if (!value) { alert('Please enter a valid email address'); return; }
+                submit.disabled = true;
+                submit.textContent = 'Submitting...';
+
+                const formData = new FormData(form);
+                formData.set('email', value);
+
+                try {
+                    const response = await fetch(form.dataset.subscribeUrl, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken') || '',
+                        },
+                        body: formData,
+                        credentials: 'same-origin',
+                    });
+
+                    const data = await response.json();
+                    if (response.ok && data.ok) {
+                        submit.textContent = '✓ Subscribed';
+                        email.value = '';
+                        setTimeout(()=>{ submit.disabled = false; submit.textContent = 'Subscribe'; }, 2200);
+                    } else {
+                        alert(data.message || 'Subscription failed. Please try again.');
+                        submit.disabled = false;
+                        submit.textContent = 'Subscribe';
+                    }
+                } catch (err) {
+                    alert('Unable to subscribe right now. Please try again later.');
+                    submit.disabled = false;
+                    submit.textContent = 'Subscribe';
+                }
+            });
+        })();
+
+        // Password visibility toggles (no dependencies)
+        (function(){
+            const inputs = document.querySelectorAll('input[type="password"]');
+            if (!inputs.length) return;
+
+            inputs.forEach(function(input){
+                if (input.dataset.hasToggle === 'true') return;
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'password-field';
+                input.parentNode.insertBefore(wrapper, input);
+                wrapper.appendChild(input);
+
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'password-toggle';
+                button.setAttribute('aria-label', 'Show password');
+                button.setAttribute('aria-pressed', 'false');
+                button.innerHTML = '<i class="fa fa-eye toggle-icon" aria-hidden="true"></i>';
+
+                button.addEventListener('click', function(){
+                    const show = input.type === 'password';
+                    input.type = show ? 'text' : 'password';
+                    button.setAttribute('aria-pressed', show ? 'true' : 'false');
+                    button.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+                    const icon = button.querySelector('.toggle-icon');
+                    icon.classList.toggle('fa-eye', !show);
+                    icon.classList.toggle('fa-eye-slash', show);
+                });
+
+                wrapper.appendChild(button);
+                input.dataset.hasToggle = 'true';
+            });
+        })();
+    </script>
+</body>
+</html>

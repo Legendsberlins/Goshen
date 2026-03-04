@@ -1,0 +1,6 @@
+# Django Payment Integration - Additional Requirements
+# Add these to your existing requirements.txt
+
+# Payment Gateway SDKs
+stripe>=8.0.0
+requests>=2.31.0  # For Paystack API calls

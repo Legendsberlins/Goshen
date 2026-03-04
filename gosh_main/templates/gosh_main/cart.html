@@ -1,0 +1,184 @@
+{% extends 'gosh_main/base.html' %}
+{% load static humanize %}
+
+{% block title %}Cart{% endblock %}
+
+{% block content %}
+{% if items %}
+<section class="cart-page">
+    <div class="cart-grid container">
+        <div class="cart-items">
+            <h2>Your Cart</h2>
+            <div class="cart-list">
+                {% for it in items %}
+                <div class="cart-item">
+                    <div class="cart-item-left">
+                        <div class="cart-thumb-wrap">
+                            {% if it.product.image_url %}
+                                <img src="{{ it.product.image_url }}" class="cart-thumb" alt="{{ it.product.name }}">
+                            {% elif it.product.image %}
+                                <img src="{{ it.product.image.url }}" class="cart-thumb" alt="{{ it.product.name }}">
+                            {% else %}
+                                <img src="{% static 'gosh_main/images/Feature_1.jpg' %}" class="cart-thumb" alt="{{ it.product.name }}">
+                            {% endif %}
+                        </div>
+                        <div class="cart-item-name">{{ it.product.name }}</div>
+                        <div class="cart-item-actions">
+                            <form method="post" action="{% url 'gosh_main:add_to_cart' it.product.id %}" class="inline-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="product_id" value="{{ it.product.id }}">
+                                <button type="submit" class="small">+1</button>
+                            </form>
+                            <form method="post" action="{% url 'gosh_main:remove_from_cart' it.product.id %}" class="inline-form">
+                                {% csrf_token %}
+                                <button type="submit" class="small danger">Remove</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="cart-item-right">
+                        <div class="cart-qty">Qty: <strong>{{ it.qty }}</strong></div>
+                        <div class="cart-price">Price: ₦{{ it.product.price|default:'0'|floatformat:2|intcomma }}</div>
+                        <div class="cart-line">Total: ₦{{ it.line_total|floatformat:2|intcomma }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <aside class="cart-summary-card">
+            <h3>Order Summary</h3>
+            <div class="summary-row">
+                <span>Items</span>
+                <span>{{ items|length }}</span>
+            </div>
+            <div class="summary-row total">
+                <span>Total</span>
+                <span>₦{{ total|floatformat:2|intcomma }}</span>
+            </div>
+            <a class="btn-primary-large" href="{% url 'gosh_main:checkout_address' %}">Place Order</a>
+        </aside>
+    </div>
+</section>
+{% else %}
+    <section class="cart-empty container">
+        <h2>Your cart is empty</h2>
+        <p>Looks like you haven't added anything yet. Visit the <a href="{% url 'gosh_main:shop' %}">shop</a> to get started.</p>
+    </section>
+{% endif %}
+
+<style>
+/* Cart image thumbnails - reduced size */
+.cart-thumb {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #eee;
+}
+
+.cart-thumb-wrap {
+    float: left;
+    margin-right: 0.75rem;
+}
+
+/* Increase margin between total and place order button */
+.cart-summary-card .btn-primary-large {
+    margin-top: 1.5rem;
+}
+
+/* Cart page layout */
+.cart-page .cart-grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 1rem;
+}
+
+.cart-items h2 {
+    margin-top: 0;
+}
+
+.cart-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    border: 1px solid #f0f0f0;
+    border-radius: 6px;
+}
+
+.cart-item-left {
+    flex: 1;
+}
+
+.cart-item-name {
+    font-weight: 600;
+    color: var(--accent);
+}
+
+.cart-item-actions {
+    margin-top: 0.5rem;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.inline-form {
+    display: inline-block;
+    margin: 0;
+}
+
+.inline-form .small {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.9rem;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    background: #fff;
+    cursor: pointer;
+}
+
+.inline-form .danger {
+    color: #d9534f;
+    border-color: #f2dede;
+}
+
+.cart-item-right {
+    text-align: right;
+    min-width: 120px;
+}
+
+.cart-summary-card {
+    padding: 1rem;
+    border: 1px solid #eee;
+    border-radius: 6px;
+}
+
+.cart-summary-card h3 {
+    margin-top: 0;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.45rem 0;
+}
+
+.summary-row.total {
+    font-weight: 700;
+    border-top: 1px solid #f3f3f3;
+    padding-top: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .cart-page .cart-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+{% endblock %}
