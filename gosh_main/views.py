@@ -43,13 +43,6 @@ CATEGORY_DISPLAY_NAMES = {
     'animal-feeds': 'Animal Feeds',
 }
 
-LEGACY_IMAGE_ALIASES = {
-    'product2.jpg': 'zobo.jpg',
-    'product4.jpg': 'tigernut_milk.jpg',
-    'product5.jpg': 'red_palm_oil.jpg',
-    'product6.jpg': 'dried_afang.jpg',
-}
-
 
 def get_category_display_name(slug):
     return CATEGORY_DISPLAY_NAMES.get(slug, slug.replace('-', ' ').title())
@@ -59,16 +52,30 @@ def normalize_image_url(image_value):
     if not image_value:
         return ""
 
-    image_value = str(image_value)
-    if image_value.startswith(("http://", "https://")):
-        return image_value
+    value = str(image_value).strip().replace('\\', '/')
 
-    normalized = image_value if image_value.startswith("/") else f"/static/{image_value.lstrip('/')}"
-    filename = normalized.rsplit('/', 1)[-1].lower()
-    alias = LEGACY_IMAGE_ALIASES.get(filename)
-    if alias:
-        normalized = f"{normalized.rsplit('/', 1)[0]}/{alias}"
-    return normalized
+    if value.startswith(("http://", "https://", "data:")):
+        return value
+
+    if value.startswith("/static/") or value.startswith("/media/"):
+        return value
+
+    if value.startswith("static/") or value.startswith("media/"):
+        return f"/{value}"
+
+    if value.startswith("/gosh_main/images/"):
+        return f"/static{value}"
+
+    if value.startswith("gosh_main/images/"):
+        return f"/static/{value}"
+
+    if value.startswith("/"):
+        return value
+
+    if "/" not in value:
+        return f"/static/gosh_main/images/{value}"
+
+    return f"/static/{value}"
 
 
 def is_customer_user(request):
