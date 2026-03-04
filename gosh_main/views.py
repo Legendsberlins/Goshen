@@ -28,6 +28,47 @@ from .models import RestaurantOrder
 
 logger = logging.getLogger(__name__)
 UserModel = get_user_model()
+EXCLUDED_CATEGORY_SLUGS = {'staples', 'oils', 'flours'}
+
+CATEGORY_DISPLAY_NAMES = {
+    'vegetable-leaves': 'African Vegetable Leaves & Pods',
+    'staples-thickeners': 'African Staples & Thickeners',
+    'seafoods': 'African Seafoods',
+    'plant-milk': 'African Plant-Milk Beverages',
+    'oils-fats': 'Natural African Edible Oils & Fats',
+    'flours-grains': 'African Flours & Grains',
+    'spices': 'African Spices & Seasonings',
+    'juices': 'Natural Juices & Beverages',
+    'water': 'Packaged Drinking Water',
+    'animal-feeds': 'Animal Feeds',
+}
+
+LEGACY_IMAGE_ALIASES = {
+    'product2.jpg': 'zobo.jpg',
+    'product4.jpg': 'tigernut_milk.jpg',
+    'product5.jpg': 'red_palm_oil.jpg',
+    'product6.jpg': 'dried_afang.jpg',
+}
+
+
+def get_category_display_name(slug):
+    return CATEGORY_DISPLAY_NAMES.get(slug, slug.replace('-', ' ').title())
+
+
+def normalize_image_url(image_value):
+    if not image_value:
+        return ""
+
+    image_value = str(image_value)
+    if image_value.startswith(("http://", "https://")):
+        return image_value
+
+    normalized = image_value if image_value.startswith("/") else f"/static/{image_value.lstrip('/')}"
+    filename = normalized.rsplit('/', 1)[-1].lower()
+    alias = LEGACY_IMAGE_ALIASES.get(filename)
+    if alias:
+        normalized = f"{normalized.rsplit('/', 1)[0]}/{alias}"
+    return normalized
 
 
 def is_customer_user(request):
@@ -244,14 +285,6 @@ def home(request):
     """Render the home page with database-driven featured products."""
     featured = []
 
-    def normalize_image_url(image_value):
-        if not image_value:
-            return ""
-        image_value = str(image_value)
-        if image_value.startswith(("http://", "https://", "/")):
-            return image_value
-        return f"/static/{image_value.lstrip('/')}"
-
     try:
         top_selling_ids = list(
             OrderItem.objects.filter(order__payment_status='paid', product__isnull=False)
@@ -265,11 +298,25 @@ def home(request):
             products_by_id = Product.objects.in_bulk(top_selling_ids)
             db_featured = [products_by_id[product_id] for product_id in top_selling_ids if product_id in products_by_id]
         else:
-            db_featured = list(Product.objects.filter(is_featured=True).order_by('-created_at')[:6])
+            db_featured = list(
+                Product.objects
+                .exclude(category__slug__in=EXCLUDED_CATEGORY_SLUGS)
+                .filter(is_featured=True)
+                .order_by('-created_at')[:6]
+            )
             if not db_featured:
-                db_featured = list(Product.objects.all().order_by('-created_at')[:6])
+                db_featured = list(
+                    Product.objects
+                    .exclude(category__slug__in=EXCLUDED_CATEGORY_SLUGS)
+                    .order_by('-created_at')[:6]
+                )
     except Exception:
         db_featured = []
+
+    db_featured = [
+        product for product in db_featured
+        if getattr(getattr(product, 'category', None), 'slug', '') not in EXCLUDED_CATEGORY_SLUGS
+    ]
 
     if db_featured:
         for product in db_featured:
@@ -292,16 +339,29 @@ def home(request):
 def products(request):
     # Keep categories in sync with shop page
     try:
-        db_cats = list(Category.objects.all().order_by('name').values('name', 'slug'))
+        db_cats = list(
+            Category.objects
+            .exclude(slug__in=EXCLUDED_CATEGORY_SLUGS)
+            .order_by('name')
+            .values('name', 'slug')
+        )
         if db_cats:
             categories = db_cats
         else:
-            category_slugs = sorted({p.get('category') for p in get_mock_products() if p.get('category')})
-            categories = [{'name': slug.replace('-', ' ').title(), 'slug': slug} for slug in category_slugs]
+            category_slugs = sorted({
+                p.get('category')
+                for p in get_mock_products()
+                if p.get('category') and p.get('category') not in EXCLUDED_CATEGORY_SLUGS
+            })
+            categories = [{'name': get_category_display_name(slug), 'slug': slug} for slug in category_slugs]
     except Exception:
         try:
-            category_slugs = sorted({p.get('category') for p in get_mock_products() if p.get('category')})
-            categories = [{'name': slug.replace('-', ' ').title(), 'slug': slug} for slug in category_slugs]
+            category_slugs = sorted({
+                p.get('category')
+                for p in get_mock_products()
+                if p.get('category') and p.get('category') not in EXCLUDED_CATEGORY_SLUGS
+            })
+            categories = [{'name': get_category_display_name(slug), 'slug': slug} for slug in category_slugs]
         except Exception:
             categories = []
 
@@ -322,22 +382,21 @@ def get_mock_products():
     This lets cart view fall back to showing items when the DB is not populated.
     """
     return [
-        {'id': 1, 'name': 'Ground Egusi - 500g', 'price': '2500', 'price_usd': '5.00', 'category': 'staples', 'description': 'Premium ground melon seeds', 'is_new': True, 'image': '/static/gosh_main/images/Feature_1.jpg'},
-        {'id': 2, 'name': 'Dried Ukazi - 50g', 'price': '1500', 'price_usd': '3.00', 'category': 'vegetable-leaves', 'description': 'Fresh dried afang leaves', 'image': '/static/gosh_main/images/product6.jpg'},
-        {'id': 11, 'name': 'Ugu (Fluted Pumpkin) - Dried 50g', 'price': '1400', 'price_usd': '2.80', 'category': 'vegetable-leaves', 'description': 'Dried ugu leaves for soups', 'image': '/static/gosh_main/images/product6.jpg'},
-        {'id': 12, 'name': 'Utazi - 50g', 'price': '1600', 'price_usd': '3.20', 'category': 'vegetable-leaves', 'description': 'Bitter aromatic utazi leaves', 'image': '/static/gosh_main/images/product6.jpg'},
-        {'id': 13, 'name': 'Bitter Leaf - 50g', 'price': '1300', 'price_usd': '2.60', 'category': 'vegetable-leaves', 'description': 'Dried bitter leaf', 'image': '/static/gosh_main/images/product6.jpg'},
-        {'id': 14, 'name': 'Waterleaf - 50g', 'price': '1200', 'price_usd': '2.40', 'category': 'vegetable-leaves', 'description': 'Dried waterleaf', 'image': '/static/gosh_main/images/product6.jpg'},
-        {'id': 15, 'name': 'Moringa - 50g', 'price': '1100', 'price_usd': '2.20', 'category': 'vegetable-leaves', 'description': 'Dried moringa leaves', 'image': '/static/gosh_main/images/product6.jpg'},
-        {'id': 16, 'name': 'Dried Okra - 50g', 'price': '900', 'price_usd': '1.80', 'category': 'vegetable-leaves', 'description': 'Dried okra for soups', 'image': '/static/gosh_main/images/product6.jpg'},
+        {'id': 2, 'name': 'Dried Ukazi - 50g', 'price': '1500', 'price_usd': '3.00', 'category': 'vegetable-leaves', 'description': 'Fresh dried afang leaves', 'image': '/static/gosh_main/images/dried_afang.jpg'},
+        {'id': 11, 'name': 'Ugu (Fluted Pumpkin) - Dried 50g', 'price': '1400', 'price_usd': '2.80', 'category': 'vegetable-leaves', 'description': 'Dried ugu leaves for soups', 'image': '/static/gosh_main/images/dried_ugu.jpg'},
+        {'id': 12, 'name': 'Utazi - 50g', 'price': '1600', 'price_usd': '3.20', 'category': 'vegetable-leaves', 'description': 'Bitter aromatic utazi leaves', 'image': '/static/gosh_main/images/dried_utazi.jpg'},
+        {'id': 13, 'name': 'Bitter Leaf - 50g', 'price': '1300', 'price_usd': '2.60', 'category': 'vegetable-leaves', 'description': 'Dried bitter leaf', 'image': '/static/gosh_main/images/dried_bitter_leaf.jpg'},
+        {'id': 14, 'name': 'Waterleaf - 50g', 'price': '1200', 'price_usd': '2.40', 'category': 'vegetable-leaves', 'description': 'Dried waterleaf', 'image': '/static/gosh_main/images/dried_afang.jpg'},
+        {'id': 15, 'name': 'Moringa - 50g', 'price': '1100', 'price_usd': '2.20', 'category': 'vegetable-leaves', 'description': 'Dried moringa leaves', 'image': '/static/gosh_main/images/dried_ugu.jpg'},
+        {'id': 16, 'name': 'Dried Okra - 50g', 'price': '900', 'price_usd': '1.80', 'category': 'vegetable-leaves', 'description': 'Dried okra for soups', 'image': '/static/gosh_main/images/dried_afang.jpg'},
         {'id': 3, 'name': 'Smoked Catfish - 1kg', 'price': '5200', 'price_usd': '10.40', 'category': 'seafoods', 'description': 'Premium smoked catfish', 'on_sale': True, 'image': '/static/gosh_main/images/Feature_2.jpg'},
-        {'id': 4, 'name': 'Tigernut Milk - 500ml', 'price': '1800', 'price_usd': '3.60', 'category': 'plant-milk', 'description': 'Fresh tigernut drink', 'image': '/static/gosh_main/images/product4.jpg'},
-        {'id': 5, 'name': 'Red Palm Oil - 1L', 'price': '4500', 'price_usd': '9.00', 'category': 'oils', 'description': 'Pure red palm oil', 'image': '/static/gosh_main/images/product5.jpg'},
-        {'id': 6, 'name': 'Plantain Flour - 1kg', 'price': '3200', 'price_usd': '6.40', 'category': 'flours', 'description': 'All-natural plantain flour', 'image': '/static/gosh_main/images/Feature_3.jpg'},
-        {'id': 7, 'name': 'Suya Spice - 100g', 'price': '800', 'price_usd': '1.60', 'category': 'spices', 'description': 'Authentic suya seasoning', 'image': '/static/gosh_main/images/product5.jpg'},
-        {'id': 8, 'name': 'Zobo Drink - 1L', 'price': '1200', 'price_usd': '2.40', 'category': 'juices', 'description': 'Refreshing hibiscus drink', 'image': '/static/gosh_main/images/product2.jpg'},
-        {'id': 9, 'name': 'Table Water - 75cl', 'price': '200', 'price_usd': '0.40', 'category': 'water', 'description': 'Pure drinking water', 'image': '/static/gosh_main/images/product6.jpg'},
-        {'id': 10, 'name': 'Poultry Feed - 25kg', 'price': '8500', 'price_usd': '17.00', 'category': 'animal-feeds', 'description': 'Premium poultry grower', 'image': '/static/gosh_main/images/product4.jpg'},
+        {'id': 4, 'name': 'Tigernut Milk - 500ml', 'price': '1800', 'price_usd': '3.60', 'category': 'plant-milk', 'description': 'Fresh tigernut drink', 'image': '/static/gosh_main/images/tigernut_milk.jpg'},
+        {'id': 5, 'name': 'Red Palm Oil - 1L', 'price': '4500', 'price_usd': '9.00', 'category': 'oils-fats', 'description': 'Pure red palm oil', 'image': '/static/gosh_main/images/red_palm_oil.jpg'},
+        {'id': 6, 'name': 'Plantain Flour - 1kg', 'price': '3200', 'price_usd': '6.40', 'category': 'flours-grains', 'description': 'All-natural plantain flour', 'image': '/static/gosh_main/images/plantain_flour.jpg'},
+        {'id': 7, 'name': 'Suya Spice - 100g', 'price': '800', 'price_usd': '1.60', 'category': 'spices', 'description': 'Authentic suya seasoning', 'image': '/static/gosh_main/images/dried_red_pepper.jpg'},
+        {'id': 8, 'name': 'Zobo Drink - 1L', 'price': '1200', 'price_usd': '2.40', 'category': 'juices', 'description': 'Refreshing hibiscus drink', 'image': '/static/gosh_main/images/zobo.jpg'},
+        {'id': 9, 'name': 'Table Water - 75cl', 'price': '200', 'price_usd': '0.40', 'category': 'water', 'description': 'Pure drinking water', 'image': '/static/gosh_main/images/table_water.jpg'},
+        {'id': 10, 'name': 'Poultry Feed - 25kg', 'price': '8500', 'price_usd': '17.00', 'category': 'animal-feeds', 'description': 'Premium poultry grower', 'image': '/static/gosh_main/images/poultry_feed.jpg'},
     ]
 
 
@@ -346,22 +405,23 @@ def about(request):
 def shop(request):
     # Get category from URL parameter
     current_category = request.GET.get('cat', 'all')
-
-    def normalize_image_url(image_value):
-        if not image_value:
-            return ""
-        image_value = str(image_value)
-        if image_value.startswith(("http://", "https://", "/")):
-            return image_value
-        return f"/static/{image_value.lstrip('/')}"
+    if current_category in EXCLUDED_CATEGORY_SLUGS:
+        current_category = 'all'
 
     # Prefer DB products; fall back to mock list if DB is empty
     products = []
     try:
         if current_category and current_category != 'all':
-            db_qs = Product.objects.filter(category__slug=current_category)
+            db_qs = (
+                Product.objects
+                .exclude(category__slug__in=EXCLUDED_CATEGORY_SLUGS)
+                .filter(category__slug=current_category)
+            )
         else:
-            db_qs = Product.objects.all()
+            db_qs = (
+                Product.objects
+                .exclude(category__slug__in=EXCLUDED_CATEGORY_SLUGS)
+            )
         products = list(db_qs.order_by('name'))
         for product in products:
             product.image_url = normalize_image_url(getattr(product, 'image', ''))
@@ -371,9 +431,16 @@ def shop(request):
     if not products:
         all_products = get_mock_products()
         if current_category and current_category != 'all':
-            mock_list = [p for p in all_products if p.get('category') == current_category]
+            mock_list = [
+                p for p in all_products
+                if p.get('category') == current_category
+                and p.get('category') not in EXCLUDED_CATEGORY_SLUGS
+            ]
         else:
-            mock_list = all_products
+            mock_list = [
+                p for p in all_products
+                if p.get('category') not in EXCLUDED_CATEGORY_SLUGS
+            ]
         mock_list = sorted(mock_list, key=lambda p: (p.get('name') or '').lower())
         # normalize mock dicts to objects for template compatibility
         products = []
@@ -401,16 +468,29 @@ def shop(request):
 
     # Build categories list: prefer DB categories, fallback to mock-derived categories
     try:
-        db_cats = list(Category.objects.all().order_by('name').values('name', 'slug'))
+        db_cats = list(
+            Category.objects
+            .exclude(slug__in=EXCLUDED_CATEGORY_SLUGS)
+            .order_by('name')
+            .values('name', 'slug')
+        )
         if db_cats:
             categories = db_cats
         else:
-            category_slugs = sorted({p.get('category') for p in get_mock_products() if p.get('category')})
-            categories = [{'name': slug.replace('-', ' ').title(), 'slug': slug} for slug in category_slugs]
+            category_slugs = sorted({
+                p.get('category')
+                for p in get_mock_products()
+                if p.get('category') and p.get('category') not in EXCLUDED_CATEGORY_SLUGS
+            })
+            categories = [{'name': get_category_display_name(slug), 'slug': slug} for slug in category_slugs]
     except Exception:
         try:
-            category_slugs = sorted({p.get('category') for p in get_mock_products() if p.get('category')})
-            categories = [{'name': slug.replace('-', ' ').title(), 'slug': slug} for slug in category_slugs]
+            category_slugs = sorted({
+                p.get('category')
+                for p in get_mock_products()
+                if p.get('category') and p.get('category') not in EXCLUDED_CATEGORY_SLUGS
+            })
+            categories = [{'name': get_category_display_name(slug), 'slug': slug} for slug in category_slugs]
         except Exception:
             categories = []
 
@@ -484,14 +564,6 @@ def add_to_cart(request, product_id):
 
 def product_detail(request, product_id):
     """Show product details"""
-    def normalize_image_url(image_value):
-        if not image_value:
-            return ""
-        image_value = str(image_value)
-        if image_value.startswith(("http://", "https://", "/")):
-            return image_value
-        return f"/static/{image_value.lstrip('/')}"
-
     # Prefer DB product; fallback to mock products
     try:
         pid_int = int(product_id)
@@ -501,11 +573,15 @@ def product_detail(request, product_id):
 
     try:
         product = Product.objects.get(id=pid_int)
+        if getattr(getattr(product, 'category', None), 'slug', '') in EXCLUDED_CATEGORY_SLUGS:
+            return redirect('gosh_main:shop')
         product.image_url = normalize_image_url(getattr(product, 'image', ''))
     except Product.DoesNotExist:
         p_dict = next((p for p in get_mock_products() if p.get('id') == pid_int), None)
         if not p_dict:
             messages.error(request, "Product not found")
+            return redirect('gosh_main:shop')
+        if p_dict.get('category') in EXCLUDED_CATEGORY_SLUGS:
             return redirect('gosh_main:shop')
         p_dict = p_dict.copy()
         p_dict['image_url'] = normalize_image_url(p_dict.get('image'))
@@ -530,14 +606,6 @@ def cart_view(request):
     cart = request.session.get('cart', {})
     items = []
     total = 0
-
-    def normalize_image_url(image_value):
-        if not image_value:
-            return ""
-        image_value = str(image_value)
-        if image_value.startswith(("http://", "https://", "/")):
-            return image_value
-        return f"/static/{image_value.lstrip('/')}"
 
     for pid, qty in cart.items():
         try:
