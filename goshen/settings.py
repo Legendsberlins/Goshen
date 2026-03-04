@@ -38,7 +38,7 @@ ALLOWED_HOSTS = [
     host.strip()
     for host in os.environ.get(
         'ALLOWED_HOSTS',
-        '127.0.0.1,localhost,YOUR_USERNAME.pythonanywhere.com'
+        '127.0.0.1,localhost,Danobong.pythonanywhere.com'
     ).split(',')
     if host.strip()
 ]
@@ -47,7 +47,7 @@ CSRF_TRUSTED_ORIGINS = [
     origin.strip()
     for origin in os.environ.get(
         'CSRF_TRUSTED_ORIGINS',
-        'https://YOUR_USERNAME.pythonanywhere.com'
+        'https://Danobong.pythonanywhere.com'
     ).split(',')
     if origin.strip()
 ]
