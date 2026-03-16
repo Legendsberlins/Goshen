@@ -8,7 +8,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
 import logging
-import re  
+import re
+import random  
 from django.contrib import messages
 from types import SimpleNamespace
 from django.conf import settings
@@ -20,7 +21,11 @@ from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 
 from .forms import PasswordResetRequestForm
-from .services.email_service import send_contact_email, send_password_reset_email
+from .services.email_service import (
+    send_contact_email,
+    send_password_reset_email,
+    send_email_verification_email,
+)
 
 from django.http import JsonResponse
 from django.db.models import Sum
@@ -28,6 +33,14 @@ from .models import RestaurantOrder
 
 logger = logging.getLogger(__name__)
 UserModel = get_user_model()
+
+
+class EmailVerificationTokenGenerator(PasswordResetTokenGenerator):
+    def _make_hash_value(self, user, timestamp):
+        return f"{user.pk}{timestamp}{user.is_active}{user.email}"
+
+
+email_verification_token = EmailVerificationTokenGenerator()
 EXCLUDED_CATEGORY_SLUGS = {'staples', 'oils', 'flours'}
 
 CATEGORY_DISPLAY_NAMES = {
@@ -41,6 +54,17 @@ CATEGORY_DISPLAY_NAMES = {
     'juices': 'Natural Juices & Beverages',
     'water': 'Packaged Drinking Water',
     'animal-feeds': 'Animal Feeds',
+}
+
+UNIT_LABELS = {
+    'item': 'item',
+    'kg': 'kg',
+    'g': 'g',
+    'l': 'L',
+    'ml': 'ml',
+    'bag': 'bag',
+    'bottle': 'bottle',
+    'pack': 'pack',
 }
 
 GENERIC_CATEGORY_IMAGE_NAMES = {
@@ -162,6 +186,19 @@ def resolve_product_image_url(product):
     return normalized
 
 
+def get_product_unit_label(product):
+    if hasattr(product, 'get_unit_display'):
+        try:
+            display = product.get_unit_display()
+            if display:
+                return display
+        except Exception:
+            pass
+
+    unit_value = str(getattr(product, 'unit', 'item') or 'item').strip().lower()
+    return UNIT_LABELS.get(unit_value, 'item')
+
+
 def is_customer_user(request):
     return request.user.is_authenticated and not request.user.is_superuser
 
@@ -190,6 +227,12 @@ def login_view(request):
             print(f"Logged in as {user.username}")
             return HttpResponseRedirect(reverse("gosh_main:home"))
         else:
+            existing_user = UserModel.objects.filter(username=username).first()
+            if existing_user is None or not existing_user.is_active:
+                return render(request, "gosh_main/signin.html", {
+                    "message": "User Does not Exist",
+                    "page": "login"
+                })
             return render(request, "gosh_main/signin.html", {
                 "message": "Invalid username and/or password.",
                 "page": "login"
@@ -279,6 +322,7 @@ def register(request):
                 last_name=last_name,
                 password=password
             )
+            user.is_active = False
             user.save()
         except IntegrityError:
             return render(request, "gosh_main/signup.html", {
@@ -286,10 +330,81 @@ def register(request):
                 "page": "register"
             })
 
-        login(request, user)
-        return HttpResponseRedirect(reverse("gosh_main:home"))
+        token = email_verification_token.make_token(user)
+        uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+        verification_url = request.build_absolute_uri(
+            reverse(
+                "gosh_main:verify_email",
+                kwargs={"uidb64": uidb64, "token": token},
+            )
+        )
+
+        verification_message = render_to_string(
+            "gosh_main/emails/email_verification.txt",
+            {
+                "user": user,
+                "verification_url": verification_url,
+                "expire_hours": 24,
+            },
+        )
+        email_sent = send_email_verification_email(
+            user.email,
+            verification_message,
+            "Verify your Goshen account",
+        )
+
+        if not email_sent:
+            user.delete()
+            return render(
+                request,
+                "gosh_main/signup.html",
+                {
+                    "message": "We could not send the verification email. Please check email settings and try again.",
+                    "form_data": form_data,
+                    "page": "register",
+                },
+            )
+
+        return render(
+            request,
+            "gosh_main/email_verification_sent.html",
+            {
+                "page": "login",
+                "email": user.email,
+                "verification_url": verification_url if settings.DEBUG else None,
+            },
+        )
     else:
         return render(request, "gosh_main/signup.html", {"page": "register"})
+
+
+def verify_email(request, uidb64, token):
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = UserModel.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, UserModel.DoesNotExist):
+        user = None
+
+    if not user or not email_verification_token.check_token(user, token):
+        return render(
+            request,
+            "gosh_main/email_verification_invalid.html",
+            {"page": "login"},
+        )
+
+    if not user.is_active:
+        user.is_active = True
+        user.save(update_fields=["is_active"])
+
+    return render(
+        request,
+        "gosh_main/signin.html",
+        {
+            "page": "login",
+            "message": "Your email has been verified. You can sign in now.",
+            "message_success": True,
+        },
+    )
 
 
 def password_reset_request(request):
@@ -317,11 +432,22 @@ def password_reset_request(request):
             )
             
             # Use SendGrid Web API helper (bypasses SMTP firewall issues)
-            send_password_reset_email(
+            email_sent = send_password_reset_email(
                 user.email,
                 message,
                 "Reset your Goshen password"
             )
+
+            if not email_sent:
+                return render(
+                    request,
+                    "gosh_main/password_reset_request.html",
+                    {
+                        "page": "login",
+                        "form": form,
+                        "message": "We could not send the password reset email. Please check email settings and try again.",
+                    },
+                )
 
             return render(
                 request,
@@ -420,10 +546,27 @@ def home(request):
             cp['image_url'] = normalize_image_url(cp.get('image'))
             featured.append(SimpleNamespace(**cp))
 
+    # Fetch random products for carousel (4-5 images)
+    carousel_products = []
+    try:
+        all_products = Product.objects.exclude(category__slug__in=EXCLUDED_CATEGORY_SLUGS).all()
+        if all_products.exists():
+            num_carousel = min(5, all_products.count())
+            random_products = random.sample(list(all_products), num_carousel)
+            for product in random_products:
+                product.image_url = resolve_product_image_url(product)
+                carousel_products.append(product)
+    except Exception:
+        pass
+
     return render(
         request,
         "gosh_main/home.html",
-        {"page": "home", "featured_products": featured},
+        {
+            "page": "home",
+            "featured_products": featured,
+            "carousel_products": carousel_products
+        },
     )
 
 
@@ -680,7 +823,8 @@ def product_detail(request, product_id):
 
     context = {
         'product': product,
-        'page': 'shop'
+        'page': 'shop',
+        'product_unit_label': get_product_unit_label(product),
     }
 
     return render(request, "gosh_main/product_detail.html", context)

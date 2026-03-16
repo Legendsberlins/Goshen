@@ -19,11 +19,23 @@ class Category(models.Model):
 
 
 class Product(models.Model):
+    UNIT_CHOICES = [
+        ('item', 'Item'),
+        ('kg', 'Kilogram (kg)'),
+        ('g', 'Gram (g)'),
+        ('l', 'Liter (L)'),
+        ('ml', 'Milliliter (ml)'),
+        ('bag', 'Bag'),
+        ('bottle', 'Bottle'),
+        ('pack', 'Pack'),
+    ]
+
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
     name = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, unique=True)
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    unit = models.CharField(max_length=20, choices=UNIT_CHOICES, default='item')
     image = models.CharField(max_length=255, blank=True, help_text="Static path under static/ (e.g. 'gosh_main/images/foo.jpg')")
     is_featured = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)

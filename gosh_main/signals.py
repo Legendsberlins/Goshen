@@ -59,6 +59,7 @@ def order_status_changed(sender, instance, created, **kwargs):
     Also broadcast tracking updates via WebSocket.
     """
     from .services.logistics_service import LogisticsService, broadcast_tracking_update
+    from .services.email_service import send_order_tracking_email
     
     previous_status = getattr(instance, '_previous_status', None)
     became_shipped = instance.status == 'shipped' and previous_status != 'shipped'
@@ -66,6 +67,7 @@ def order_status_changed(sender, instance, created, **kwargs):
     if became_shipped:
         tracking = LogisticsService.create_tracking_for_order(instance)
         broadcast_tracking_update(tracking)
+        send_order_tracking_email(instance, tracking)
 
 
 

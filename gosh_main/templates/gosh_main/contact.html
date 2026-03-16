@@ -10,7 +10,7 @@
 		color: #1B5E20;
 	}
 </style>
-<h2>📞 CONTACT US</h2>
+<h2><i class="fa fa-phone heading-icon" aria-hidden="true"></i>CONTACT US</h2>
 
 
 <div class="contact-grid">
@@ -21,27 +21,27 @@
 			{% if contact_info.image %}
 				<img src="{% static contact_info.image %}" alt="Contact image" class="contact-image">
 			{% endif %}
-			<h3>📍 Factory Location:</h3>
+			<h3><i class="fa fa-map-marker heading-icon" aria-hidden="true"></i>Factory Location:</h3>
 			<p>{{ contact_info.address|linebreaks }}</p>
 
-			<h3>📧 Email:</h3>
+			<h3><i class="fa fa-envelope heading-icon" aria-hidden="true"></i>Email:</h3>
 			<p><a href="mailto:{{ contact_info.email }}">{{ contact_info.email }}</a></p>
 
-			<h3>📞 Phone / WhatsApp:</h3>
+			<h3><i class="fa fa-phone heading-icon" aria-hidden="true"></i>Phone / WhatsApp:</h3>
 			<p>{{ contact_info.phone }}</p>
 
 		{% else %}
-			<h3>📍 Factory Location:</h3>
+			<h3><i class="fa fa-map-marker heading-icon" aria-hidden="true"></i>Factory Location:</h3>
 			<p>Plot 48, Itam Industrial Layout, Uyo, Akwa Ibom State, Nigeria</p>
 
-			<h3>📧 Email:</h3>
+			<h3><i class="fa fa-envelope heading-icon" aria-hidden="true"></i>Email:</h3>
 			<p><a href="mailto:inquiry@goshengiantfoods.com">inquiry@goshengiantfoods.com</a></p>
 
-			<h3>📞 Phone / WhatsApp:</h3>
+			<h3><i class="fa fa-phone heading-icon" aria-hidden="true"></i>Phone / WhatsApp:</h3>
 			<p>+234 705 702 5093</p>
 		{% endif %}
 
-		<h3>🌐 Business Hours:</h3>
+		<h3><i class="fa fa-clock-o heading-icon" aria-hidden="true"></i>Business Hours:</h3>
 		<p>Monday – Friday: 8:00 AM – 5:00 PM</p>
 		<p>Saturday: 9:00 AM – 3:00PM</p>
 	</div>

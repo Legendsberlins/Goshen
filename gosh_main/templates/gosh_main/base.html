@@ -16,23 +16,26 @@
             <div class="header-left">
                 <!-- logo image -->
                 <img src="{% static 'gosh_main/images/goshen_logo.jpg' %}" alt="Goshen logo" class="nav-logo">
-                <a class="brand" href="{% url 'gosh_main:home' %}">Goshen Giant Food</a>
+  <!--              <a class="brand" href="{% url 'gosh_main:home' %}">Goshen Giant Food</a> -->
             </div>
             <nav class="main-nav" aria-label="Main navigation">
                 <!-- hamburger for small screens -->
                 <button id="navToggle" type="button" class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="navLinks">☰</button>
                 <div class="nav-links" id="navLinks">
-                    <a href="{% url 'gosh_main:home' %}" class="{% if page == 'home' %}active{% endif %}">Home</a>
-                    <a href="{% url 'gosh_main:about' %}" class="{% if page == 'about' %}active{% endif %}">About</a>
-                    <a href="{% url 'gosh_main:products' %}" class="{% if page == 'products' %}active{% endif %}">Products</a>
-                    <a href="{% url 'gosh_main:shop' %}" class="{% if page == 'shop' %}active{% endif %}">Shop</a>
-                    <a href="{% url 'gosh_main:cart' %}" class="nav-cart-link {% if page == 'cart' %}active{% endif %}">Cart{% if cart_count > 0 %}<span class="cart-count-badge">{{ cart_count }}</span>{% endif %}</a>
-                    <a href="{% url 'gosh_main:contact' %}" class="{% if page == 'contact' %}active{% endif %}">Contact</a>
+                    <a href="{% url 'gosh_main:home' %}" class="{% if page == 'home' or request.resolver_match.url_name == 'home' %}active{% endif %}">Home</a>
+                    <a href="{% url 'gosh_main:about' %}" class="{% if page == 'about' or request.resolver_match.url_name == 'about' %}active{% endif %}">About</a>
+                    <a href="{% url 'gosh_main:products' %}" class="{% if page == 'products' or request.resolver_match.url_name == 'products' %}active{% endif %}">Products</a>
+                    <a href="{% url 'gosh_main:shop' %}" class="{% if page == 'shop' or request.resolver_match.url_name == 'shop' or request.resolver_match.url_name == 'product_detail' %}active{% endif %}">Shop</a>
+                    {% if user.is_authenticated and not user.is_superuser %}
+                        <a href="{% url 'gosh_main:my_orders_tracking' %}" class="{% if page == 'tracking' or request.resolver_match.url_name == 'my_orders_tracking' or request.resolver_match.url_name == 'track_order' or request.resolver_match.url_name == 'track_order_number' %}active{% endif %}">Track Orders</a>
+                    {% endif %}
+                    <a href="{% url 'gosh_main:cart' %}" class="nav-cart-link {% if page == 'cart' or page == 'checkout' or request.resolver_match.url_name == 'cart' or request.resolver_match.url_name == 'checkout_address' or request.resolver_match.url_name == 'checkout_payment' or request.resolver_match.url_name == 'payment_success' or request.resolver_match.url_name == 'payment_cancel' %}active{% endif %}">Cart{% if cart_count > 0 %}<span class="cart-count-badge">{{ cart_count }}</span>{% endif %}</a>
+                    <a href="{% url 'gosh_main:contact' %}" class="{% if page == 'contact' or request.resolver_match.url_name == 'contact' %}active{% endif %}">Contact</a>
                     {% if user.is_authenticated and not user.is_superuser %}
                         <a href="{% url 'gosh_main:logout' %}">Sign out</a>
                     {% else %}
-                        <a href="{% url 'gosh_main:login' %}" class="{% if page == 'login' %}active{% endif %}">Sign in</a>
-                        <a href="{% url 'gosh_main:register' %}" class="{% if page == 'register' %}active{% endif %}">Sign up</a>
+                        <a href="{% url 'gosh_main:login' %}" class="{% if page == 'login' or request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'password_reset_request' or request.resolver_match.url_name == 'password_reset_confirm' %}active{% endif %}">Sign in</a>
+                        <a href="{% url 'gosh_main:register' %}" class="{% if page == 'register' or request.resolver_match.url_name == 'register' %}active{% endif %}">Sign up</a>
                     {% endif %}
                 </div>
             </nav>
@@ -54,14 +57,14 @@
         <div class="container">
             <!-- Newsletter Section - Featured at Top -->
             <div class="footer-newsletter-section">
-                <div class="newsletter-icon">📬</div>
+                <div class="newsletter-icon"><i class="fa fa-envelope-open" aria-hidden="true"></i></div>
                 <h3 class="newsletter-title">Join the Naturis Giant Family</h3>
                 <p class="newsletter-subtitle">Be the first to know about new products, special offers, and healthy African food tips!</p>
                 
                 <ul class="newsletter-benefits">
-                    <li>✅ Exclusive Discounts</li>
-                    <li>✅ Early Access to New Launches</li>
-                    <li>✅ Recipes, Health Tips & More</li>
+                    <li><i class="fa fa-check-circle" aria-hidden="true"></i> Exclusive Discounts</li>
+                    <li><i class="fa fa-check-circle" aria-hidden="true"></i> Early Access to New Launches</li>
+                    <li><i class="fa fa-check-circle" aria-hidden="true"></i> Recipes, Health Tips & More</li>
                 </ul>
 
                 <form id="newsletterForm" class="newsletter-form" data-subscribe-url="{% url 'gosh_main:newsletter_subscribe' %}">
@@ -75,9 +78,9 @@
 
                 <div class="social-links">
                     <span class="social-label">Follow us:</span>
-                    <a href="https://www.instagram.com/naturisgiant" aria-label="Visit our Instagram page" target="_blank" rel="noopener noreferrer">📸 Instagram</a>
-                    <a href="https://www.facebook.com/NaturisGiantFoods" aria-label="Visit our Facebook page" target="_blank" rel="noopener noreferrer">📘 Facebook</a>
-                    <a href="https://wa.me/2347057025093" aria-label="Contact us on WhatsApp" target="_blank" rel="noopener noreferrer">📱 WhatsApp</a>
+                    <a href="https://www.instagram.com/naturisgiant" aria-label="Visit our Instagram page" target="_blank" rel="noopener noreferrer"><i class="fa fa-instagram social-icon" aria-hidden="true"></i> Instagram</a>
+                    <a href="https://www.facebook.com/NaturisGiantFoods" aria-label="Visit our Facebook page" target="_blank" rel="noopener noreferrer"><i class="fa fa-facebook-square social-icon" aria-hidden="true"></i> Facebook</a>
+                    <a href="https://wa.me/2347057025093" aria-label="Contact us on WhatsApp" target="_blank" rel="noopener noreferrer"><i class="fa fa-whatsapp social-icon" aria-hidden="true"></i> WhatsApp</a>
                 </div>
             </div>
 

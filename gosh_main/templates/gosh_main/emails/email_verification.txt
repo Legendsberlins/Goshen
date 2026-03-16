@@ -1,0 +1,14 @@
+Hello {{ user.first_name|default:user.username }},
+
+Welcome to Goshen Giant Food.
+
+Please verify your email address by clicking the link below:
+
+{{ verification_url }}
+
+This verification link expires in {{ expire_hours }} hour(s).
+
+If you did not create this account, you can safely ignore this email.
+
+Thanks,
+Goshen Giant Food Support

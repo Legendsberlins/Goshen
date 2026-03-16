@@ -56,6 +56,15 @@
         <p>You can track your order status from your account dashboard.</p>
     </div>
 
+    <div style="margin-top:1rem;display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;">
+        {% if order.tracking %}
+            <a href="{% url 'gosh_main:track_order_number' order.tracking.tracking_number %}" class="btn-primary">Track This Order</a>
+        {% else %}
+            <a href="{% url 'gosh_main:my_orders_tracking' %}" class="btn-primary">Track My Orders</a>
+            <p style="width:100%;margin-top:0.25rem;font-size:0.9rem;color:#666;">Tracking number appears after your order is marked as shipped.</p>
+        {% endif %}
+    </div>
+
     {% else %}
     <p>Your order has been placed successfully!</p>
     {% if payment_method == 'bank_transfer' %}

@@ -39,7 +39,14 @@
             <div class="product-detail-actions">
                 <form method="post" action="{% url 'gosh_main:add_to_cart' product.id %}" class="product-detail-cart-form">
                     {% csrf_token %}
-                    <button type="submit" class="btn-primary-large">🛒 Add to Cart</button>
+                    <div class="quantity-block">
+                        <label for="qty" class="quantity-label">Select quantity ({{ product_unit_label }})</label>
+                        <div class="quantity-row">
+                            <input id="qty" name="quantity" type="number" min="1" value="1" class="quantity-input">
+                            <span class="quantity-hint">Enter how many {{ product_unit_label }} you want.</span>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary-large"><i class="fa fa-shopping-cart btn-icon" aria-hidden="true"></i>Add to Cart</button>
                 </form>
 
                 <a href="{% url 'gosh_main:shop' %}" class="btn-secondary">← Back to Shop</a>

@@ -8,7 +8,7 @@
     <!-- Shop Header -->
     <div class="shop-header">
         <h2 class="section-title centered">
-            🛒 {{ current_category_name }}
+            <i class="fa fa-shopping-basket" aria-hidden="true"></i> {{ current_category_name }}
         </h2>
         <p class="shop-subtitle">Browse our selection of authentic African foods</p>
     </div>
@@ -33,31 +33,35 @@
             {% for product in page_obj.object_list %}
                 <article class="shop-product-card">
                     <!-- Product Image -->
-                    <div class="shop-product-image">
-                        {% if product.image_url %}
-                            <img src="{{ product.image_url }}" alt="{{ product.name }}">
-                        {% else %}
-                            <div class="image-placeholder">
-                                <span class="placeholder-icon">📦</span>
-                                <span class="placeholder-text">No Image</span>
-                            </div>
-                        {% endif %}
-                        {% if product.is_new %}
-                            <span class="product-badge new">New</span>
-                        {% elif product.on_sale %}
-                            <span class="product-badge sale">Sale</span>
-                        {% endif %}
-                    </div>
+                    <a class="shop-product-image-link" href="{% url 'gosh_main:product_detail' product.id %}">
+                        <div class="shop-product-image">
+                            {% if product.image_url %}
+                                <img src="{{ product.image_url }}" alt="{{ product.name }}">
+                            {% else %}
+                                <div class="image-placeholder">
+                                    <span class="placeholder-icon"><i class="fa fa-picture-o" aria-hidden="true"></i></span>
+                                    <span class="placeholder-text">No Image</span>
+                                </div>
+                            {% endif %}
+                            {% if product.is_new %}
+                                <span class="product-badge new">New</span>
+                            {% elif product.on_sale %}
+                                <span class="product-badge sale">Sale</span>
+                            {% endif %}
+                        </div>
+                    </a>
 
                     <!-- Product Info -->
                     <div class="shop-product-info">
-                        <h3 class="product-name">{{ product.name }}</h3>
+                        <h3 class="product-name">
+                            <a class="shop-product-name-link" href="{% url 'gosh_main:product_detail' product.id %}">{{ product.name }}</a>
+                        </h3>
                         <p class="product-description">{{ product.description|default:"Premium quality African food product"|truncatewords:15 }}</p>
                         
                         <!-- Product Rating (if available) -->
                         {% if product.rating %}
                             <div class="product-rating-small">
-                                <span class="stars-small">⭐⭐⭐⭐⭐</span>
+                                <span class="stars-small" aria-label="5 star rating"><i class="fa fa-star" aria-hidden="true"></i><i class="fa fa-star" aria-hidden="true"></i><i class="fa fa-star" aria-hidden="true"></i><i class="fa fa-star" aria-hidden="true"></i><i class="fa fa-star" aria-hidden="true"></i></span>
                                 <span class="rating-count-small">({{ product.review_count|default:0 }})</span>
                             </div>
                         {% endif %}
@@ -75,10 +79,11 @@
 
                         <!-- Action Buttons -->
                         <div class="shop-product-actions">
+                            <a href="{% url 'gosh_main:product_detail' product.id %}" class="btn-view-product">View Product</a>
                             <form method="post" action="{% url 'gosh_main:add_to_cart' product.id %}" class="add-cart-form">
                                 {% csrf_token %}
                                 <input type="hidden" name="product_id" value="{{ product.id }}">
-                                <button type="submit" class="btn-add-to-cart">🛒 Add to Cart</button>
+                                <button type="submit" class="btn-add-to-cart"><i class="fa fa-shopping-cart btn-icon" aria-hidden="true"></i>Add to Cart</button>
                             </form>
                         </div>
                     </div>
@@ -87,7 +92,7 @@
         {% else %}
             <!-- Empty State -->
             <div class="empty-state">
-                <div class="empty-icon">📦</div>
+                <div class="empty-icon"><i class="fa fa-inbox" aria-hidden="true"></i></div>
                 <h3>No Products Found</h3>
                 <p>We don't have any products in this category yet. Check back soon!</p>
                 <a href="{% url 'gosh_main:shop' %}" class="btn-primary-large">View All Products</a>

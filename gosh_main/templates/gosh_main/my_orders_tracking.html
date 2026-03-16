@@ -1,436 +1,113 @@
+{% extends 'gosh_main/base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Orders - Goshen Giant Food</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f7fa;
-            color: #333;
-        }
+{% block title %}Track Orders{% endblock %}
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
+{% block content %}
+<section class="tracking-orders-page">
+    <div class="tracking-hero-block">
+        <p class="tracking-eyebrow">Order Tracking</p>
+        <h1 class="tracking-page-title">My Orders and Delivery Status</h1>
+        <p class="tracking-page-subtitle">Follow each order from warehouse pickup to doorstep delivery in one place.</p>
+    </div>
 
-        header {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-            color: white;
-            padding: 30px 0;
-            margin-bottom: 30px;
-        }
+    <div class="tracking-stats-grid" aria-label="Order tracking statistics">
+        <article class="tracking-stat-card">
+            <p class="tracking-stat-value">{{ total_orders }}</p>
+            <p class="tracking-stat-label">Total Orders</p>
+        </article>
+        <article class="tracking-stat-card">
+            <p class="tracking-stat-value">{{ delivered_orders }}</p>
+            <p class="tracking-stat-label">Delivered</p>
+        </article>
+        <article class="tracking-stat-card">
+            <p class="tracking-stat-value">{{ trackings.count }}</p>
+            <p class="tracking-stat-label">In Transit</p>
+        </article>
+    </div>
 
-        header h1 {
-            font-size: 2rem;
-            margin-bottom: 10px;
-        }
+    {% if trackings %}
+    <div class="tracking-orders-list">
+        {% for tracking in trackings %}
+        <article class="tracking-order-card">
+            <div class="tracking-order-main">
+                <div class="tracking-order-top">
+                    <p class="tracking-order-number">{{ tracking.order.order_number }}</p>
+                    <span class="tracking-status-badge {{ tracking.status }}">{{ tracking.get_status_display }}</span>
+                </div>
 
-        header p {
-            font-size: 1rem;
-            opacity: 0.9;
-        }
+                <p class="tracking-number-line">Tracking Number: <strong>{{ tracking.tracking_number }}</strong></p>
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .stat-number {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #3498db;
-            margin-bottom: 5px;
-        }
-
-        .stat-label {
-            color: #7f8c8d;
-            font-size: 0.9rem;
-        }
-
-        .orders-list {
-            display: grid;
-            gap: 20px;
-        }
-
-        .order-card {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 20px;
-            align-items: start;
-            cursor: pointer;
-            transition: box-shadow 0.3s, transform 0.3s;
-        }
-
-        .order-card:hover {
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            transform: translateY(-2px);
-        }
-
-        .order-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-            margin-bottom: 15px;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-
-        .order-number {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #2c3e50;
-            font-family: 'Courier New', monospace;
-        }
-
-        .tracking-number {
-            font-size: 0.95rem;
-            color: #7f8c8d;
-        }
-
-        .tracking-number strong {
-            color: #3498db;
-            font-family: 'Courier New', monospace;
-        }
-
-        .order-info {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-bottom: 15px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 5px;
-        }
-
-        .info-item {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .info-label {
-            font-size: 0.8rem;
-            color: #7f8c8d;
-            text-transform: uppercase;
-            margin-bottom: 3px;
-            font-weight: 600;
-        }
-
-        .info-value {
-            font-size: 0.95rem;
-            color: #2c3e50;
-            font-weight: 500;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            white-space: nowrap;
-        }
-
-        .status-badge.warehouse {
-            background: #f39c12;
-            color: white;
-        }
-
-        .status-badge.in_transit {
-            background: #3498db;
-            color: white;
-        }
-
-        .status-badge.arrived_hub {
-            background: #9b59b6;
-            color: white;
-        }
-
-        .status-badge.out_for_delivery {
-            background: #e74c3c;
-            color: white;
-        }
-
-        .status-badge.delivered {
-            background: #27ae60;
-            color: white;
-        }
-
-        .order-pending {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .order-processing {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-
-        .order-shipped {
-            background: #cfe2ff;
-            color: #084298;
-        }
-
-        .order-delivered {
-            background: #d1e7dd;
-            color: #0f5132;
-        }
-
-        .order-actions {
-            display: flex;
-            gap: 10px;
-            flex-direction: column;
-            justify-content: flex-start;
-        }
-
-        .btn {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            font-weight: 600;
-            transition: all 0.3s;
-            text-decoration: none;
-            text-align: center;
-            display: inline-block;
-        }
-
-        .btn-primary {
-            background: #3498db;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #2980b9;
-        }
-
-        .btn-light {
-            background: #ecf0f1;
-            color: #2c3e50;
-        }
-
-        .btn-light:hover {
-            background: #bdc3c7;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            background: white;
-            border-radius: 10px;
-        }
-
-        .empty-state i {
-            font-size: 4rem;
-            color: #bdc3c7;
-            margin-bottom: 20px;
-            display: block;
-        }
-
-        .empty-state h2 {
-            color: #7f8c8d;
-            margin-bottom: 10px;
-        }
-
-        .empty-state p {
-            color: #95a5a6;
-            margin-bottom: 20px;
-        }
-
-        .progress-bar {
-            height: 4px;
-            background: #ecf0f1;
-            border-radius: 2px;
-            margin-top: 10px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: #3498db;
-            transition: width 0.3s;
-        }
-
-        @media (max-width: 768px) {
-            .order-card {
-                grid-template-columns: 1fr;
-            }
-
-            .order-header {
-                flex-direction: column;
-            }
-
-            .order-info {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-
-            header h1 {
-                font-size: 1.5rem;
-            }
-        }
-    </style>
-</head>
-<body>
-    <header>
-        <div class="container">
-            <h1><i class="fas fa-box"></i> My Orders & Tracking</h1>
-            <p>Monitor all your orders in one place</p>
-        </div>
-    </header>
-
-    <main class="container">
-        <!-- Stats -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-number">{{ total_orders }}</div>
-                <div class="stat-label">Total Orders</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">{{ delivered_orders }}</div>
-                <div class="stat-label">Delivered</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">{{ trackings.count }}</div>
-                <div class="stat-label">Being Shipped</div>
-            </div>
-        </div>
-
-        <!-- Orders List -->
-        {% if trackings %}
-        <div class="orders-list">
-            {% for tracking in trackings %}
-            <div class="order-card" onclick="location.href='/track/{{ tracking.tracking_number }}/'">
-                <div>
-                    <div class="order-header">
-                        <div>
-                            <div class="order-number">{{ tracking.order.order_number }}</div>
-                            <div class="tracking-number">
-                                Tracking: <strong>{{ tracking.tracking_number }}</strong>
-                            </div>
-                        </div>
+                <div class="tracking-order-details">
+                    <div>
+                        <p class="tracking-detail-label">Recipient</p>
+                        <p class="tracking-detail-value">{{ tracking.order.recipient_name }}</p>
                     </div>
-
-                    <div class="order-info">
-                        <div class="info-item">
-                            <span class="info-label">Recipient</span>
-                            <span class="info-value">{{ tracking.order.recipient_name }}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Location</span>
-                            <span class="info-value">{{ tracking.order.state }}, {{ tracking.order.country }}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Current Status</span>
-                            <span class="info-value">{{ tracking.current_location_name }}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Est. Delivery</span>
-                            <span class="info-value">
-                                {% if tracking.delivered_at %}
-                                    {{ tracking.delivered_at|date:"M d" }}
-                                {% elif tracking.estimated_delivery %}
-                                    {{ tracking.estimated_delivery|date:"M d" }}
-                                {% else %}
-                                    Pending
-                                {% endif %}
-                            </span>
-                        </div>
+                    <div>
+                        <p class="tracking-detail-label">Destination</p>
+                        <p class="tracking-detail-value">{{ tracking.order.state }}, {{ tracking.order.country }}</p>
                     </div>
-
-                    <div style="margin-top: 10px;">
-                        <span class="status-badge {{ tracking.status }}">
-                            {{ tracking.get_status_display }}
-                        </span>
+                    <div>
+                        <p class="tracking-detail-label">Current Status</p>
+                        <p class="tracking-detail-value">{{ tracking.current_location_name }}</p>
                     </div>
-
-                    <!-- Progress bar based on status -->
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: {% if tracking.status == 'warehouse' %}25%{% elif tracking.status == 'in_transit' %}50%{% elif tracking.status == 'arrived_hub' %}75%{% elif tracking.status == 'out_for_delivery' %}90%{% elif tracking.status == 'delivered' %}100%{% else %}0%{% endif %};"></div>
+                    <div>
+                        <p class="tracking-detail-label">Estimated Delivery</p>
+                        <p class="tracking-detail-value">
+                            {% if tracking.delivered_at %}
+                                {{ tracking.delivered_at|date:"M d" }}
+                            {% elif tracking.estimated_delivery %}
+                                {{ tracking.estimated_delivery|date:"M d" }}
+                            {% else %}
+                                Pending
+                            {% endif %}
+                        </p>
                     </div>
                 </div>
 
-                <div class="order-actions">
-                    <a href="/track/{{ tracking.tracking_number }}/" class="btn btn-primary">
-                        <i class="fas fa-map-marked-alt"></i> Track
-                    </a>
-                    <a href="/contact/" class="btn btn-light">
-                        <i class="fas fa-envelope"></i> Help
-                    </a>
+                <div class="tracking-progress" role="img" aria-label="Delivery progress">
+                    <div class="tracking-progress-fill progress-{{ tracking.status }}"></div>
                 </div>
             </div>
-            {% endfor %}
-        </div>
-        {% else %}
-        <div class="empty-state">
-            <i class="fas fa-bag-shopping"></i>
-            <h2>No Orders Yet</h2>
-            <p>You haven't placed any orders yet.</p>
-            <a href="/shop/" class="btn btn-primary"><i class="fas fa-shopping-cart"></i> Start Shopping</a>
-        </div>
-        {% endif %}
-    </main>
 
-    <footer style="background: #2c3e50; color: white; text-align: center; padding: 30px; margin-top: 50px;">
-        <p>&copy; 2026 Goshen Giant Food. All rights reserved.</p>
-        <p style="font-size: 0.9rem; margin-top: 10px;">
-            <a href="/" style="color: #3498db; text-decoration: none;">Home</a> |
-            <a href="/contact/" style="color: #3498db; text-decoration: none;">Contact</a> |
-            <a href="/privacy/" style="color: #3498db; text-decoration: none;">Privacy</a>
-        </p>
-    </footer>
+            <div class="tracking-order-actions">
+                <a href="{% url 'gosh_main:track_order_number' tracking.tracking_number %}" class="btn-primary-large tracking-btn-primary" onclick="event.stopPropagation();">
+                    <i class="fa fa-map-marker btn-icon" aria-hidden="true"></i>Track Order
+                </a>
+                <a href="{% url 'gosh_main:contact' %}" class="tracking-btn-secondary" onclick="event.stopPropagation();">
+                    <i class="fa fa-envelope btn-icon" aria-hidden="true"></i>Get Help
+                </a>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="tracking-empty-state">
+        <i class="fa fa-shopping-bag" aria-hidden="true"></i>
+        <h2>No Orders Yet</h2>
+        <p>You have not placed any order yet. Start shopping to see live tracking updates here.</p>
+        <a href="{% url 'gosh_main:shop' %}" class="btn-primary-large">
+            <i class="fa fa-shopping-cart btn-icon" aria-hidden="true"></i>Start Shopping
+        </a>
+    </div>
+    {% endif %}
+</section>
 
-    <script>
-        // WebSocket for real-time updates
+<script>
+    (function() {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const ws = new WebSocket(`${protocol}//${window.location.host}/ws/tracking/`);
 
-        ws.onopen = () => {
-            console.log('Connected to tracking updates');
-        };
-
-        ws.onmessage = (event) => {
+        ws.onmessage = function(event) {
             const message = JSON.parse(event.data);
             if (message.type === 'tracking_update') {
-                // Refresh the page to show updated status
-                // In a real app, you'd update specific elements
                 console.log('Tracking update received:', message.data);
             }
         };
 
-        ws.onerror = (error) => {
-            console.error('WebSocket error:', error);
+        ws.onerror = function(error) {
+            console.error('Tracking WebSocket error:', error);
         };
-    </script>
-</body>
-</html>
+    })();
+</script>
+{% endblock %}

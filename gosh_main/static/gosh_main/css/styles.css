@@ -2,7 +2,8 @@
 :root {
     /* Goshen colour palette inspired by the Naturis Giant packaging image */
     --brand-yellow: #F2C94C; /* warm product bag yellow */
-    --accent: #2E7D32;       /* deep green used for text/buttons */
+    --accent: #109107;       /* deep green used for text/buttons #6BF178*/
+    --accent-gradient: linear-gradient(135deg, #109107, #1B5E20);
     --accent-dark: #1B5E20;  /* darker green for hover states */
     --muted: #566160;        /* neutral muted tone */
     --light-bg: #FFF8EA;     /* very light warm background */
@@ -44,6 +45,14 @@ body {
 .section-icon {
     font-size: 3rem;
     margin-bottom: 1rem;
+}
+
+.btn-icon {
+    margin-right: 0.45rem;
+}
+
+.heading-icon {
+    margin-right: 0.45rem;
 }
 
 /* === HEADER === */
@@ -160,7 +169,7 @@ body {
     height: 1.2rem;
     padding: 0 0.35rem;
     border-radius: 999px;
-    background: var(--accent);
+    background: var(--accent-gradient);
     color: #fff;
     font-size: 0.75rem;
     font-weight: 700;
@@ -289,7 +298,8 @@ body {
     width: 100%;
     height: 100%;
     flex: 0 0 100%;
-    object-fit: cover;
+    object-fit: contain;
+    background: #f5f5f5;
 }
 
 .carousel .controls {
@@ -360,7 +370,7 @@ body {
 .carousel-cta {
     display: inline-block;
     margin-top: 1rem;
-    background-color: var(--accent);
+    background: var(--accent-gradient);
     color: #fff;
     text-decoration: none;
     padding: 1rem 2.5rem;
@@ -444,7 +454,7 @@ body {
 .card-icon {
     font-size: 3rem;
     margin-bottom: 1rem;
-    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    background: var(--accent-gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -464,7 +474,7 @@ body {
 /* === STATS SECTION === */
 .stats-section {
     padding: 4rem 1rem;
-    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    background: var(--accent-gradient);
     color: #fff;
 }
 
@@ -572,7 +582,7 @@ body {
     position: absolute;
     top: 1rem;
     right: 1rem;
-    background: var(--accent);
+    background: var(--accent-gradient);
     color: #fff;
     padding: 0.5rem 1rem;
     border-radius: 20px;
@@ -608,6 +618,8 @@ body {
     color: #ffa500;
     font-size: 0.875rem;
     letter-spacing: 1px;
+    display: inline-flex;
+    gap: 0.2rem;
 }
 
 .rating-count {
@@ -636,7 +648,7 @@ body {
 .btn-add-cart {
     flex: 1;
     padding: 0.75rem 1rem;
-    background: var(--accent);
+    background: var(--accent-gradient);
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -671,7 +683,7 @@ body {
 
 /* Carousel Navigation Buttons */
 .product-carousel-btn {
-    background: var(--accent);
+    background: var(--accent-gradient);
     color: #fff;
     border: none;
     width: 50px;
@@ -812,6 +824,8 @@ body {
     font-size: 1.25rem;
     margin-bottom: 1rem;
     letter-spacing: 2px;
+    display: inline-flex;
+    gap: 0.2rem;
 }
 
 .review-title {
@@ -843,7 +857,7 @@ body {
     width: 50px;
     height: 50px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    background: var(--accent-gradient);
     color: #fff;
     display: flex;
     align-items: center;
@@ -876,7 +890,7 @@ body {
 
 /* Review Carousel Buttons - Match Product Carousel Style */
 .review-carousel-btn {
-    background: var(--accent);
+    background: var(--accent-gradient);
     color: #fff;
     border: none;
     width: 50px;
@@ -937,7 +951,7 @@ body {
 }
 
 .btn-review-action.primary {
-    background: var(--accent);
+    background: var(--accent-gradient);
     color: #fff;
     box-shadow: var(--shadow-sm);
 }
@@ -955,7 +969,7 @@ body {
 }
 
 .btn-review-action.secondary:hover {
-    background: var(--accent);
+    background: var(--accent-gradient);
     color: #fff;
 }
 
@@ -1052,7 +1066,7 @@ body {
 .btn-primary-large {
     display: inline-block;
     padding: 1rem 2.5rem;
-    background: var(--accent);
+    background: var(--accent-gradient);
     color: #fff;
     text-decoration: none;
     border-radius: 50px;
@@ -1081,7 +1095,7 @@ body {
 }
 
 .btn-secondary:hover {
-    background: var(--accent);
+    background: var(--accent-gradient);
     color: #fff;
     transform: translateY(-2px);
 }
@@ -1206,7 +1220,7 @@ body {
 }
 
 .filter-pill.active {
-    background: var(--accent);
+    background: var(--accent-gradient);
     color: #fff;
     border-color: var(--accent-dark);
 }
@@ -1232,6 +1246,11 @@ body {
 .shop-product-card:hover {
     transform: translateY(-8px);
     box-shadow: var(--shadow-lg);
+}
+
+.shop-product-image-link {
+    display: block;
+    text-decoration: none;
 }
 
 /* Product Image */
@@ -1268,6 +1287,10 @@ body {
     opacity: 0.3;
 }
 
+.placeholder-icon .fa {
+    font-size: inherit;
+}
+
 .placeholder-text {
     margin-top: 0.5rem;
     color: var(--muted);
@@ -1291,6 +1314,15 @@ body {
     min-height: 2.6em;
 }
 
+.shop-product-name-link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.shop-product-name-link:hover {
+    color: var(--accent);
+}
+
 .product-description {
     font-size: 0.9rem;
     color: var(--muted);
@@ -1309,6 +1341,8 @@ body {
 .stars-small {
     color: #ffa500;
     font-size: 0.75rem;
+    display: inline-flex;
+    gap: 0.18rem;
 }
 
 .rating-count-small {
@@ -1423,6 +1457,38 @@ body {
     margin: 0;
 }
 
+.quantity-block {
+    margin-bottom: 0.85rem;
+}
+
+.quantity-label {
+    display: block;
+    margin-bottom: 0.35rem;
+    color: #333;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.quantity-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.quantity-input {
+    width: 110px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 0.55rem 0.65rem;
+    font-size: 1rem;
+}
+
+.quantity-hint {
+    color: var(--muted);
+    font-size: 0.88rem;
+}
+
 @media (max-width: 900px) {
     .product-detail-container {
         grid-template-columns: 1fr;
@@ -1443,6 +1509,26 @@ body {
     margin-top: auto;
 }
 
+.btn-view-product {
+    padding: 0.75rem 1rem;
+    background: #f0f0f0;
+    color: #222;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+.btn-view-product:hover {
+    background: #e0e0e0;
+    transform: translateY(-2px);
+}
+
 .add-cart-form {
     flex: 1;
     margin: 0;
@@ -1451,7 +1537,7 @@ body {
 .btn-add-to-cart {
     width: 100%;
     padding: 0.75rem 1rem;
-    background: var(--accent);
+    background: var(--accent-gradient);
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -1503,7 +1589,7 @@ body {
 
 .page-link {
     padding: 0.75rem 1.5rem;
-    background: var(--accent);
+    background: var(--accent-gradient);
     color: #fff;
     text-decoration: none;
     border-radius: 50px;
@@ -1616,6 +1702,664 @@ body {
 }
 .footer-col.faqs .payment-list li{margin-bottom:0.35rem}
 
+/* My orders tracking page */
+.tracking-orders-page {
+    padding: 1rem 0 2rem;
+}
+
+.tracking-hero-block {
+    background: linear-gradient(135deg, rgba(16, 145, 7, 0.12), rgba(242, 201, 76, 0.2));
+    border: 1px solid rgba(16, 145, 7, 0.15);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.tracking-eyebrow {
+    margin: 0;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 700;
+}
+
+.tracking-page-title {
+    margin: 0.45rem 0 0.4rem;
+    color: #1d1d1d;
+    font-size: clamp(1.5rem, 3.5vw, 2.15rem);
+}
+
+.tracking-page-subtitle {
+    margin: 0;
+    color: var(--muted);
+    max-width: 700px;
+    line-height: 1.55;
+}
+
+.tracking-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.tracking-stat-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 1rem 1.15rem;
+    border: 1px solid #edf1ea;
+    box-shadow: var(--shadow-sm);
+}
+
+.tracking-stat-value {
+    margin: 0;
+    color: var(--accent);
+    font-size: 1.65rem;
+    font-weight: 800;
+}
+
+.tracking-stat-label {
+    margin: 0.25rem 0 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.tracking-orders-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.tracking-order-card {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 1rem;
+    background: #fff;
+    border: 1px solid #edf1ea;
+    border-radius: 16px;
+    padding: 1.2rem;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+}
+
+.tracking-order-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.tracking-order-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.8rem;
+    align-items: center;
+}
+
+.tracking-order-number {
+    margin: 0;
+    font-weight: 700;
+    color: #1f2a20;
+}
+
+.tracking-status-badge {
+    display: inline-block;
+    border-radius: 999px;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    white-space: nowrap;
+    letter-spacing: 0.03em;
+}
+
+.tracking-status-badge.warehouse {
+    background: #fff2cc;
+    color: #6f4d00;
+}
+
+.tracking-status-badge.in_transit {
+    background: #dbeeff;
+    color: #084e8f;
+}
+
+.tracking-status-badge.arrived_hub {
+    background: #ece0ff;
+    color: #4f2d7f;
+}
+
+.tracking-status-badge.out_for_delivery {
+    background: #ffe2db;
+    color: #8a2f00;
+}
+
+.tracking-status-badge.delivered {
+    background: #dff6e6;
+    color: #0b5d2f;
+}
+
+.tracking-number-line {
+    margin: 0.55rem 0 0.9rem;
+    color: var(--muted);
+    font-size: 0.95rem;
+}
+
+.tracking-number-line strong {
+    color: #1f2a20;
+    font-family: "Courier New", monospace;
+}
+
+.tracking-order-details {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.8rem;
+}
+
+.tracking-detail-label {
+    margin: 0;
+    color: #667a6a;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 700;
+}
+
+.tracking-detail-value {
+    margin: 0.2rem 0 0;
+    color: #1f2a20;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.tracking-progress {
+    margin-top: 0.95rem;
+    height: 8px;
+    background: #eef2ee;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.tracking-progress-fill {
+    height: 100%;
+    width: 0;
+    background: var(--accent-gradient);
+}
+
+.tracking-progress-fill.progress-warehouse {
+    width: 25%;
+}
+
+.tracking-progress-fill.progress-in_transit {
+    width: 50%;
+}
+
+.tracking-progress-fill.progress-arrived_hub {
+    width: 75%;
+}
+
+.tracking-progress-fill.progress-out_for_delivery {
+    width: 90%;
+}
+
+.tracking-progress-fill.progress-delivered {
+    width: 100%;
+}
+
+.tracking-order-actions {
+    min-width: 172px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.tracking-btn-primary {
+    margin-top: 0;
+    text-align: center;
+    padding: 0.7rem 1rem;
+}
+
+.tracking-btn-secondary {
+    text-decoration: none;
+    text-align: center;
+    border-radius: 8px;
+    padding: 0.68rem 1rem;
+    border: 1px solid #d3ded1;
+    color: #2d3f2f;
+    font-weight: 700;
+    background: #f9fcf8;
+    transition: all 0.2s ease;
+}
+
+.tracking-btn-secondary:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.tracking-empty-state {
+    background: #fff;
+    border: 1px dashed #c8d8c6;
+    border-radius: 16px;
+    padding: 2.25rem 1.25rem;
+    text-align: center;
+}
+
+.tracking-empty-state i {
+    font-size: 3rem;
+    color: #aab7a6;
+}
+
+.tracking-empty-state h2 {
+    margin: 0.8rem 0 0.4rem;
+    color: #2d3f2f;
+}
+
+.tracking-empty-state p {
+    margin: 0 0 1.2rem;
+    color: var(--muted);
+}
+
+@media (max-width: 900px) {
+    .tracking-order-card {
+        grid-template-columns: 1fr;
+    }
+
+    .tracking-order-actions {
+        min-width: 0;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 700px) {
+    .tracking-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .tracking-order-details {
+        grid-template-columns: 1fr;
+    }
+
+    .tracking-order-actions {
+        flex-direction: column;
+    }
+}
+
+/* Single tracking page */
+.track-detail-page {
+    padding: 1rem 0 2rem;
+}
+
+.track-detail-hero {
+    background: linear-gradient(140deg, rgba(16, 145, 7, 0.12), rgba(242, 201, 76, 0.24));
+    border: 1px solid rgba(16, 145, 7, 0.18);
+    border-radius: 18px;
+    padding: 1.4rem;
+    margin-bottom: 1rem;
+}
+
+.track-detail-eyebrow {
+    margin: 0;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    font-weight: 700;
+}
+
+.track-detail-title {
+    margin: 0.45rem 0 0.35rem;
+    font-size: clamp(1.45rem, 3.2vw, 2.2rem);
+    color: #1f2a20;
+}
+
+.track-detail-subtitle {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.55;
+    max-width: 760px;
+}
+
+.track-detail-search {
+    background: #fff;
+    border: 1px solid #e6ece3;
+    border-radius: 14px;
+    box-shadow: var(--shadow-sm);
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.track-detail-search-label {
+    display: block;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #5c705e;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.track-detail-search-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.65rem;
+}
+
+.track-detail-search-row input {
+    width: 100%;
+    border: 1px solid #d5e0d1;
+    border-radius: 10px;
+    padding: 0.74rem 0.86rem;
+    font-size: 0.98rem;
+}
+
+.track-detail-search-row input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(16, 145, 7, 0.14);
+}
+
+.track-detail-search-btn {
+    margin-top: 0;
+    border: none;
+    cursor: pointer;
+}
+
+.track-detail-error {
+    background: #fff1f1;
+    color: #9a2323;
+    border: 1px solid #f2c7c7;
+    border-radius: 12px;
+    padding: 0.78rem 0.92rem;
+    margin-bottom: 1rem;
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    font-weight: 600;
+}
+
+.track-detail-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 1rem;
+    align-items: start;
+}
+
+.track-detail-map-card,
+.track-detail-info-card {
+    background: #fff;
+    border: 1px solid #e6ece3;
+    border-radius: 16px;
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.track-detail-card-head {
+    padding: 1rem 1rem 0.85rem;
+    border-bottom: 1px solid #eff3ec;
+}
+
+.track-detail-card-head h2 {
+    margin: 0;
+    color: #223124;
+    font-size: 1.04rem;
+}
+
+.track-detail-card-head p {
+    margin: 0.35rem 0 0;
+    color: #667a6a;
+    font-size: 0.88rem;
+}
+
+#map {
+    min-height: 520px;
+    width: 100%;
+}
+
+.track-detail-map-unavailable {
+    min-height: 520px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 0.5rem;
+    color: #6b7d6f;
+}
+
+.track-detail-map-unavailable i {
+    font-size: 2rem;
+}
+
+.track-detail-info-card {
+    position: sticky;
+    top: 1rem;
+    padding: 1rem;
+}
+
+.track-detail-identifiers p {
+    margin: 0 0 0.35rem;
+    font-size: 0.9rem;
+    color: #5a6a5c;
+}
+
+.track-detail-identifiers strong {
+    color: #243226;
+    font-family: "Courier New", monospace;
+}
+
+.track-detail-status {
+    display: inline-block;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 700;
+    padding: 0.45rem 0.78rem;
+    margin: 0.35rem 0 0.92rem;
+}
+
+.track-detail-status.warehouse {
+    background: #fff2cc;
+    color: #6f4d00;
+}
+
+.track-detail-status.in_transit {
+    background: #dbeeff;
+    color: #084e8f;
+}
+
+.track-detail-status.arrived_hub {
+    background: #ece0ff;
+    color: #4f2d7f;
+}
+
+.track-detail-status.out_for_delivery {
+    background: #ffe2db;
+    color: #8a2f00;
+}
+
+.track-detail-status.delivered {
+    background: #dff6e6;
+    color: #0b5d2f;
+}
+
+.track-detail-info-group {
+    border-top: 1px solid #eff3ec;
+    padding-top: 0.8rem;
+    margin-top: 0.8rem;
+}
+
+.track-detail-info-label {
+    margin: 0;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #58705f;
+    font-weight: 700;
+}
+
+.track-detail-info-value {
+    margin: 0.35rem 0 0;
+    color: #1f2f22;
+    line-height: 1.45;
+    font-weight: 600;
+}
+
+.track-detail-multiline {
+    line-height: 1.6;
+}
+
+.track-detail-logistics {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+}
+
+.track-detail-logistics-logo {
+    width: 46px;
+    height: 46px;
+    border-radius: 10px;
+    object-fit: contain;
+    border: 1px solid #e2e9de;
+    background: #f7faf6;
+    padding: 0.22rem;
+}
+
+.track-detail-logistics-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+}
+
+.track-detail-logistics-name {
+    margin: 0;
+    color: #223124;
+    font-weight: 700;
+}
+
+.track-detail-logistics-phone {
+    margin: 0.22rem 0 0;
+    color: #617565;
+    font-size: 0.9rem;
+}
+
+.track-detail-delivered {
+    margin-top: 0.92rem;
+    border-radius: 12px;
+    background: var(--accent-gradient);
+    color: #fff;
+    padding: 0.8rem 0.9rem;
+    display: flex;
+    gap: 0.55rem;
+    align-items: center;
+    font-weight: 700;
+}
+
+.track-detail-delivered p {
+    margin: 0;
+}
+
+.track-detail-timeline {
+    margin-top: 1rem;
+    border-top: 1px solid #eff3ec;
+    padding-top: 0.9rem;
+}
+
+.track-detail-timeline h3 {
+    margin: 0;
+    color: #223124;
+    font-size: 1rem;
+}
+
+.track-detail-timeline-empty {
+    margin: 0.65rem 0 0;
+    color: #6a7c6d;
+    font-size: 0.9rem;
+}
+
+.track-detail-timeline-item {
+    display: flex;
+    gap: 0.65rem;
+    margin-top: 0.7rem;
+    border-top: 1px dashed #e2eadf;
+    padding-top: 0.7rem;
+}
+
+.track-detail-timeline-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-top: 0.35rem;
+    flex-shrink: 0;
+}
+
+.track-detail-timeline-content p {
+    margin: 0;
+}
+
+.track-detail-timeline-status {
+    color: #223124;
+    font-weight: 700;
+    font-size: 0.92rem;
+}
+
+.track-detail-timeline-message {
+    margin-top: 0.18rem;
+    color: #617565;
+    font-size: 0.89rem;
+}
+
+.track-detail-timeline-time {
+    margin-top: 0.16rem;
+    color: #829284;
+    font-size: 0.82rem;
+}
+
+.track-detail-empty-state {
+    background: #fff;
+    border: 1px dashed #cad9c7;
+    border-radius: 16px;
+    text-align: center;
+    padding: 2rem 1.2rem;
+}
+
+.track-detail-empty-state i {
+    font-size: 2.6rem;
+    color: #9eb09e;
+}
+
+.track-detail-empty-state h2 {
+    margin: 0.7rem 0 0.38rem;
+    color: #223124;
+}
+
+.track-detail-empty-state p {
+    margin: 0;
+    color: #657866;
+}
+
+@media (max-width: 980px) {
+    .track-detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .track-detail-info-card {
+        position: static;
+    }
+}
+
+@media (max-width: 720px) {
+    .track-detail-search-row {
+        grid-template-columns: 1fr;
+    }
+
+    #map,
+    .track-detail-map-unavailable {
+        min-height: 380px;
+    }
+}
+
 /* === FOOTER === */
 .site-footer {
     background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
@@ -1670,6 +2414,11 @@ body {
     font-weight: 500;
 }
 
+.newsletter-benefits li .fa {
+    color: var(--accent);
+    margin-right: 0.35rem;
+}
+
 .newsletter-form {
     margin-bottom: 1.5rem;
 }
@@ -1700,7 +2449,7 @@ body {
 
 .btn-newsletter {
     padding: 0.875rem 2rem;
-    background: var(--accent);
+    background: var(--accent-gradient);
     color: #fff;
     border: none;
     border-radius: 50px;
@@ -1753,8 +2502,12 @@ body {
     font-size: 0.95rem;
 }
 
+.social-icon {
+    margin-right: 0.35rem;
+}
+
 .social-links a:hover {
-    background: var(--accent);
+    background: var(--accent-gradient);
     color: #fff;
     transform: translateY(-2px);
     box-shadow: var(--shadow-sm);

@@ -7,7 +7,7 @@
   <div class="auth-card">
     <h2>Sign in to your account</h2>
     {% if message %}
-      <div class="alert">{{ message }}</div>
+      <div class="alert{% if message_success %} alert-success{% endif %}">{{ message }}</div>
     {% endif %}
 
     <form method="post" action="{% url 'gosh_main:login' %}" class="email-signin">
