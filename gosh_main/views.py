@@ -848,18 +848,6 @@ def checkout_payment(request):
                 except Product.DoesNotExist:
                     # Skip products not in database
                     continue
-                        price=price_num
-                    )
-                    line_total = price_num * qty
-                    items.append({
-                        'product': p_obj,
-                        'product_name': p_obj.name,
-                        'product_price': price_num,
-                        'qty': qty,
-                        'line_total': line_total
-                    })
-                    subtotal += line_total
-                    print(f"DEBUG: Added mock product {p_obj.name} to order")
             
             print(f"DEBUG: Items processed = {len(items)}, subtotal = {subtotal}")
             
