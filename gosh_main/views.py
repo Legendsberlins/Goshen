@@ -86,7 +86,7 @@ PRODUCT_SLUG_IMAGE_FALLBACKS = {
     'whole-melon-egusi-seeds-5kg': 'whole_melon_seeds.jpg',
     'ground-ogbono-seeds-1kg': 'ground_ogbono.jpg',
     'whole-ogbono-seeds-5kg': 'whole_ogbono_seeds.jpg',
-    'catfish-smoked-5kg': 'feature_2.jpg',
+    'catfish-smoked-5kg': 'smoked_cat_fish.jpg',
     'crayfish-whole-5kg': 'crayfish_whole.jpg',
     'crayfish-ground-5kg': 'crayfish_ground.jpg',
     'snail-dried-frozen-5kg': 'dried_snail.jpg',
@@ -539,12 +539,6 @@ def home(request):
         for product in db_featured:
             product.image_url = resolve_product_image_url(product)
             featured.append(product)
-    else:
-        mock_products = get_mock_products()[:6]
-        for product_data in mock_products:
-            cp = product_data.copy()
-            cp['image_url'] = normalize_image_url(cp.get('image'))
-            featured.append(SimpleNamespace(**cp))
 
     # Fetch random products for carousel (4-5 images)
     carousel_products = []
@@ -579,25 +573,9 @@ def products(request):
             .order_by('name')
             .values('name', 'slug')
         )
-        if db_cats:
-            categories = db_cats
-        else:
-            category_slugs = sorted({
-                p.get('category')
-                for p in get_mock_products()
-                if p.get('category') and p.get('category') not in EXCLUDED_CATEGORY_SLUGS
-            })
-            categories = [{'name': get_category_display_name(slug), 'slug': slug} for slug in category_slugs]
+        categories = db_cats if db_cats else []
     except Exception:
-        try:
-            category_slugs = sorted({
-                p.get('category')
-                for p in get_mock_products()
-                if p.get('category') and p.get('category') not in EXCLUDED_CATEGORY_SLUGS
-            })
-            categories = [{'name': get_category_display_name(slug), 'slug': slug} for slug in category_slugs]
-        except Exception:
-            categories = []
+        categories = []
 
     return render(
         request,
@@ -610,28 +588,7 @@ from .models import AboutBlock, ContactInfo, ContactMessage, Product, Category, 
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from decimal import Decimal
 
-def get_mock_products():
-    """Return the same mock product list used by shop/product_detail.
 
-    This lets cart view fall back to showing items when the DB is not populated.
-    """
-    return [
-        {'id': 2, 'name': 'Dried Ukazi - 50g', 'price': '1500', 'price_usd': '3.00', 'category': 'vegetable-leaves', 'description': 'Fresh dried afang leaves', 'image': '/static/gosh_main/images/dried_afang.jpg'},
-        {'id': 11, 'name': 'Ugu (Fluted Pumpkin) - Dried 50g', 'price': '1400', 'price_usd': '2.80', 'category': 'vegetable-leaves', 'description': 'Dried ugu leaves for soups', 'image': '/static/gosh_main/images/dried_ugu.jpg'},
-        {'id': 12, 'name': 'Utazi - 50g', 'price': '1600', 'price_usd': '3.20', 'category': 'vegetable-leaves', 'description': 'Bitter aromatic utazi leaves', 'image': '/static/gosh_main/images/dried_utazi.jpg'},
-        {'id': 13, 'name': 'Bitter Leaf - 50g', 'price': '1300', 'price_usd': '2.60', 'category': 'vegetable-leaves', 'description': 'Dried bitter leaf', 'image': '/static/gosh_main/images/dried_bitter_leaf.jpg'},
-        {'id': 14, 'name': 'Waterleaf - 50g', 'price': '1200', 'price_usd': '2.40', 'category': 'vegetable-leaves', 'description': 'Dried waterleaf', 'image': '/static/gosh_main/images/dried_afang.jpg'},
-        {'id': 15, 'name': 'Moringa - 50g', 'price': '1100', 'price_usd': '2.20', 'category': 'vegetable-leaves', 'description': 'Dried moringa leaves', 'image': '/static/gosh_main/images/dried_ugu.jpg'},
-        {'id': 16, 'name': 'Dried Okra - 50g', 'price': '900', 'price_usd': '1.80', 'category': 'vegetable-leaves', 'description': 'Dried okra for soups', 'image': '/static/gosh_main/images/dried_afang.jpg'},
-        {'id': 3, 'name': 'Smoked Catfish - 1kg', 'price': '5200', 'price_usd': '10.40', 'category': 'seafoods', 'description': 'Premium smoked catfish', 'on_sale': True, 'image': '/static/gosh_main/images/feature_2.jpg'},
-        {'id': 4, 'name': 'Tigernut Milk - 500ml', 'price': '1800', 'price_usd': '3.60', 'category': 'plant-milk', 'description': 'Fresh tigernut drink', 'image': '/static/gosh_main/images/tigernut_milk.jpg'},
-        {'id': 5, 'name': 'Red Palm Oil - 1L', 'price': '4500', 'price_usd': '9.00', 'category': 'oils-fats', 'description': 'Pure red palm oil', 'image': '/static/gosh_main/images/red_palm_oil.jpg'},
-        {'id': 6, 'name': 'Plantain Flour - 1kg', 'price': '3200', 'price_usd': '6.40', 'category': 'flours-grains', 'description': 'All-natural plantain flour', 'image': '/static/gosh_main/images/plantain_flour.jpg'},
-        {'id': 7, 'name': 'Suya Spice - 100g', 'price': '800', 'price_usd': '1.60', 'category': 'spices', 'description': 'Authentic suya seasoning', 'image': '/static/gosh_main/images/dried_red_pepper.jpg'},
-        {'id': 8, 'name': 'Zobo Drink - 1L', 'price': '1200', 'price_usd': '2.40', 'category': 'juices', 'description': 'Refreshing hibiscus drink', 'image': '/static/gosh_main/images/zobo.jpg'},
-        {'id': 9, 'name': 'Table Water - 75cl', 'price': '200', 'price_usd': '0.40', 'category': 'water', 'description': 'Pure drinking water', 'image': '/static/gosh_main/images/table_water.jpg'},
-        {'id': 10, 'name': 'Poultry Feed - 25kg', 'price': '8500', 'price_usd': '17.00', 'category': 'animal-feeds', 'description': 'Premium poultry grower', 'image': '/static/gosh_main/images/poultry_feed.jpg'},
-    ]
 
 
 def about(request):
@@ -663,25 +620,8 @@ def shop(request):
         products = []
 
     if not products:
-        all_products = get_mock_products()
-        if current_category and current_category != 'all':
-            mock_list = [
-                p for p in all_products
-                if p.get('category') == current_category
-                and p.get('category') not in EXCLUDED_CATEGORY_SLUGS
-            ]
-        else:
-            mock_list = [
-                p for p in all_products
-                if p.get('category') not in EXCLUDED_CATEGORY_SLUGS
-            ]
-        mock_list = sorted(mock_list, key=lambda p: (p.get('name') or '').lower())
-        # normalize mock dicts to objects for template compatibility
+        # If database is empty, return empty list instead of using mock data
         products = []
-        for p in mock_list:
-            cp = p.copy()
-            cp['image_url'] = normalize_image_url(cp.get('image'))
-            products.append(SimpleNamespace(**cp))
     
     
     # When you have a real database, use this instead:
@@ -700,33 +640,16 @@ def shop(request):
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
 
-    # Build categories list: prefer DB categories, fallback to mock-derived categories
+    # Build categories list from database only
     try:
-        db_cats = list(
+        categories = list(
             Category.objects
             .exclude(slug__in=EXCLUDED_CATEGORY_SLUGS)
             .order_by('name')
             .values('name', 'slug')
         )
-        if db_cats:
-            categories = db_cats
-        else:
-            category_slugs = sorted({
-                p.get('category')
-                for p in get_mock_products()
-                if p.get('category') and p.get('category') not in EXCLUDED_CATEGORY_SLUGS
-            })
-            categories = [{'name': get_category_display_name(slug), 'slug': slug} for slug in category_slugs]
     except Exception:
-        try:
-            category_slugs = sorted({
-                p.get('category')
-                for p in get_mock_products()
-                if p.get('category') and p.get('category') not in EXCLUDED_CATEGORY_SLUGS
-            })
-            categories = [{'name': get_category_display_name(slug), 'slug': slug} for slug in category_slugs]
-        except Exception:
-            categories = []
+        categories = []
 
     current_category_name = 'All Products'
     if current_category and current_category != 'all':
@@ -811,15 +734,8 @@ def product_detail(request, product_id):
             return redirect('gosh_main:shop')
         product.image_url = resolve_product_image_url(product)
     except Product.DoesNotExist:
-        p_dict = next((p for p in get_mock_products() if p.get('id') == pid_int), None)
-        if not p_dict:
-            messages.error(request, "Product not found")
-            return redirect('gosh_main:shop')
-        if p_dict.get('category') in EXCLUDED_CATEGORY_SLUGS:
-            return redirect('gosh_main:shop')
-        p_dict = p_dict.copy()
-        p_dict['image_url'] = normalize_image_url(p_dict.get('image'))
-        product = SimpleNamespace(**p_dict)
+        messages.error(request, "Product not found")
+        return redirect('gosh_main:shop')
 
     context = {
         'product': product,
@@ -849,28 +765,8 @@ def cart_view(request):
             items.append({ 'product': p, 'qty': qty, 'line_total': (p.price or 0) * qty })
             total += (p.price or 0) * qty
         except Product.DoesNotExist:
-            # Fallback to mock products when DB is not populated
-            try:
-                pid_int = int(pid)
-            except (TypeError, ValueError):
-                continue
-            p_dict = next((x for x in get_mock_products() if x.get('id') == pid_int), None)
-            if not p_dict:
-                continue
-            # Build a lightweight object with attributes expected by templates
-            price_num = 0
-            try:
-                price_num = int(p_dict.get('price', 0))
-            except (TypeError, ValueError):
-                price_num = 0
-            p_obj = SimpleNamespace(
-                id=pid_int,
-                name=p_dict.get('name'),
-                price=price_num,
-                image_url=normalize_image_url(p_dict.get('image')),
-            )
-            items.append({ 'product': p_obj, 'qty': qty, 'line_total': price_num * qty })
-            total += price_num * qty
+            # Skip products not in database instead of using mock data
+            continue
     return render(request, "gosh_main/cart.html", {"page": "cart", "items": items, "total": total})
 
 def checkout_address(request):
@@ -950,28 +846,8 @@ def checkout_payment(request):
                     })
                     subtotal += line_total
                 except Product.DoesNotExist:
-                    # Try to get from mock products
-                    print(f"DEBUG: Product {pid} not in DB, checking mock products")
-                    try:
-                        pid_int = int(pid)
-                    except (TypeError, ValueError):
-                        print(f"DEBUG: Invalid product ID {pid}")
-                        continue
-                    
-                    p_dict = next((x for x in get_mock_products() if x.get('id') == pid_int), None)
-                    if not p_dict:
-                        print(f"DEBUG: Product {pid} not found in mock products either")
-                        continue
-                    
-                    # Create a temporary product object for mock product
-                    try:
-                        price_num = Decimal(str(p_dict.get('price', 0)))
-                    except (TypeError, ValueError):
-                        price_num = Decimal('0')
-                    
-                    p_obj = SimpleNamespace(
-                        id=pid_int, 
-                        name=p_dict.get('name', 'Unknown Product'),
+                    # Skip products not in database
+                    continue
                         price=price_num
                     )
                     line_total = price_num * qty
@@ -1178,21 +1054,8 @@ def checkout_payment(request):
             items.append({'product': p, 'qty': qty, 'line_total': line_total})
             total += line_total
         except Product.DoesNotExist:
-            try:
-                pid_int = int(pid)
-            except (TypeError, ValueError):
-                continue
-            p_dict = next((x for x in get_mock_products() if x.get('id') == pid_int), None)
-            if not p_dict:
-                continue
-            try:
-                price_num = Decimal(str(p_dict.get('price', 0)))
-            except (TypeError, ValueError):
-                price_num = Decimal('0')
-            p_obj = SimpleNamespace(id=pid_int, name=p_dict.get('name'), price=price_num, image_url=p_dict.get('image'))
-            line_total = price_num * qty
-            items.append({'product': p_obj, 'qty': qty, 'line_total': line_total})
-            total += line_total
+            # Skip products not in database
+            continue
     
     # All payment methods are available (will show configuration message if needed)
     return render(request, "gosh_main/checkout_payment.html", {
