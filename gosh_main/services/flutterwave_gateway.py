@@ -28,10 +28,10 @@ class FlutterwaveGateway(PaymentGateway):
             secret_key: Flutterwave secret key
             public_key: Flutterwave public key (optional, for frontend)
         """
-        self.secret_key = secret_key
-        self.public_key = public_key
+        self.secret_key = (secret_key or '').strip()
+        self.public_key = (public_key or '').strip() if public_key else None
         self.headers = {
-            'Authorization': f'Bearer {secret_key}',
+            'Authorization': f'Bearer {self.secret_key}',
             'Content-Type': 'application/json',
         }
     

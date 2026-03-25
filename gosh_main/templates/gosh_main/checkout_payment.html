@@ -36,13 +36,8 @@
             </label>
             
             <label>
-                <input type="radio" name="payment_method" value="stripe"> 
-                <strong>Stripe</strong> - International Credit/Debit Cards
-            </label>
-            
-            <label>
                 <input type="radio" name="payment_method" value="bank_transfer"> 
-                <strong>Bank Transfer</strong> - Direct Bank Payment
+                <strong>Bank Transfer</strong> - Paystack Bank Transfer Checkout
             </label>
         </div>
 
@@ -58,28 +53,16 @@
             </ul>
         </div>
 
-        <div id="stripeInfo" class="pay-info" style="display:none;margin-top:1.5rem;background:#e3f2fd;padding:1rem;border-radius:8px;">
-            <p><strong>💳 Stripe - Global Payment Gateway</strong></p>
-            <p>Preferred for international customers and foreign credit/debit cards.</p>
-            <ul style="text-align:left;display:inline-block;">
-                <li>✓ International cards (Visa, Mastercard, Amex)</li>
-                <li>✓ Works in 150+ countries</li>
-                <li>✓ Secure 3D authentication</li>
-                <li>✓ Best for customers outside Nigeria</li>
-                <li>✓ Instant payment processing</li>
-            </ul>
-        </div>
-
         <div id="bankInfo" class="bank-info" style="display:none;margin-top:1.5rem;background:#f3e5f5;padding:1rem;border-radius:8px;">
-            <p><strong>🏦 Bank Transfer - Manual Payment</strong></p>
-            <p>Pay directly from your bank account at your convenience. Perfect if you prefer traditional banking.</p>
+            <p><strong>🏦 Bank Transfer - Powered by Paystack</strong></p>
+            <p>You will be redirected to Paystack to complete a secure bank transfer payment.</p>
             <ul style="text-align:left;display:inline-block;">
-                <li>✓ Pay at your own pace</li>
-                <li>✓ No online transaction fees</li>
-                <li>✓ Use any Nigerian bank</li>
-                <li>✓ Order held for 24 hours pending payment</li>
+                <li>✓ Secure hosted checkout</li>
+                <li>✓ Transfer directly from Nigerian bank accounts</li>
+                <li>✓ Automatic payment status update</li>
+                <li>✓ Instant redirect after successful payment</li>
             </ul>
-            <p style="margin-top:0.5rem;"><em>⏱️ Processing time: 24-48 hours after payment confirmation</em></p>
+            <p style="margin-top:0.5rem;"><em>⏱️ You will complete this on Paystack before returning to your order</em></p>
         </div>
 
         <div class="actions" style="margin-top:2rem;">
@@ -96,17 +79,14 @@
             const sel = document.querySelector('.payment-form input[name="payment_method"]:checked');
             const v = sel ? sel.value : 'flutterwave';
             const flutterwaveInfo = document.getElementById('flutterwaveInfo');
-            const stripeInfo = document.getElementById('stripeInfo');
             const bankInfo = document.getElementById('bankInfo');
             
             // Hide all first
             if(flutterwaveInfo) flutterwaveInfo.style.display = 'none';
-            if(stripeInfo) stripeInfo.style.display = 'none';
             if(bankInfo) bankInfo.style.display = 'none';
             
             // Show selected
             if(v === 'flutterwave' && flutterwaveInfo) flutterwaveInfo.style.display = '';
-            if(v === 'stripe' && stripeInfo) stripeInfo.style.display = '';
             if(v === 'bank_transfer' && bankInfo) bankInfo.style.display = '';
         }
         radios.forEach(r => r.addEventListener('change', updatePaymentFields));

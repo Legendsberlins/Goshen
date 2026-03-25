@@ -795,19 +795,22 @@ def checkout_payment(request):
     
     # Initialize payment gateways if not already registered
     if not payment_service.get_gateway('stripe'):
-        stripe_key = getattr(settings, 'STRIPE_SECRET_KEY', '') or 'test_key'
+        stripe_key = (getattr(settings, 'STRIPE_SECRET_KEY', '') or '').strip()
         stripe_webhook_secret = getattr(settings, 'STRIPE_WEBHOOK_SECRET', '')
-        payment_service.register_gateway('stripe', StripeGateway(stripe_key, stripe_webhook_secret))
+        if stripe_key:
+            payment_service.register_gateway('stripe', StripeGateway(stripe_key, stripe_webhook_secret))
     
     if not payment_service.get_gateway('paystack'):
-        paystack_key = getattr(settings, 'PAYSTACK_SECRET_KEY', '') or 'test_key'
-        paystack_public = getattr(settings, 'PAYSTACK_PUBLIC_KEY', '')
-        payment_service.register_gateway('paystack', PaystackGateway(paystack_key, paystack_public))
+        paystack_key = (getattr(settings, 'PAYSTACK_SECRET_KEY', '') or '').strip()
+        paystack_public = (getattr(settings, 'PAYSTACK_PUBLIC_KEY', '') or '').strip()
+        if paystack_key:
+            payment_service.register_gateway('paystack', PaystackGateway(paystack_key, paystack_public))
     
     if not payment_service.get_gateway('flutterwave'):
-        flutterwave_key = getattr(settings, 'FLUTTERWAVE_SECRET_KEY', '') or 'test_key'
-        flutterwave_public = getattr(settings, 'FLUTTERWAVE_PUBLIC_KEY', '')
-        payment_service.register_gateway('flutterwave', FlutterwaveGateway(flutterwave_key, flutterwave_public))
+        flutterwave_key = (getattr(settings, 'FLUTTERWAVE_SECRET_KEY', '') or '').strip()
+        flutterwave_public = (getattr(settings, 'FLUTTERWAVE_PUBLIC_KEY', '') or '').strip()
+        if flutterwave_key:
+            payment_service.register_gateway('flutterwave', FlutterwaveGateway(flutterwave_key, flutterwave_public))
     
     address_data = request.session.get('checkout_address')
     cart = request.session.get('cart', {})
@@ -818,7 +821,7 @@ def checkout_payment(request):
     
     if request.method == 'POST':
         # Get selected payment method
-        payment_method = request.POST.get('payment_method', 'stripe')
+        payment_method = request.POST.get('payment_method', 'flutterwave')
         
         print(f"========== CHECKOUT PAYMENT POST ==========")
         print(f"DEBUG: Payment method selected = '{payment_method}'")
@@ -993,32 +996,30 @@ def checkout_payment(request):
                     return redirect('gosh_main:checkout_payment')
             
             elif payment_method == 'bank_transfer':
-                # Create payment record for bank transfer
-                Payment.objects.create(
-                    order=order,
-                    payment_method='bank_transfer',
-                    amount=total,
-                    status='pending',
-                    payer_email=request.user.email if is_customer_user(request) else '',
-                    payer_name=order.recipient_name
-                )
-                
-                # Clear cart
-                request.session.pop('cart', None)
-                request.session.pop('checkout_address', None)
-                
-                # Show bank transfer instructions
-                context = {
-                    'page': 'checkout',
-                    'payment_method': 'bank_transfer',
-                    'order': order,
-                    'bank_details': {
-                        'bank_name': 'First Bank',
-                        'account_number': '0123456789',
-                        'account_name': 'Goshen Giant Food'
-                    }
-                }
-                return render(request, 'gosh_main/checkout_bank_transfer.html', context)
+                # Route bank transfer option through Paystack so users can complete transfer online.
+                try:
+                    result = payment_service.create_payment('paystack', order, total, 'NGN')
+
+                    if result.get('success'):
+                        Payment.objects.create(
+                            order=order,
+                            payment_method='paystack',
+                            amount=total,
+                            status='pending',
+                            gateway_reference=result.get('reference'),
+                            payer_email=request.user.email if is_customer_user(request) else '',
+                            payer_name=order.recipient_name
+                        )
+                        return redirect(result['checkout_url'])
+                    else:
+                        messages.error(request, f"Payment initialization failed: {result.get('error')}")
+                        order.delete()
+                        return redirect('gosh_main:checkout_payment')
+                except Exception as e:
+                    logger.error(f"Bank transfer (Paystack) payment error: {str(e)}")
+                    messages.error(request, "Bank transfer via Paystack is not configured. Please use another payment method.")
+                    order.delete()
+                    return redirect('gosh_main:checkout_payment')
             
             else:
                 messages.error(request, "Invalid payment method selected")
