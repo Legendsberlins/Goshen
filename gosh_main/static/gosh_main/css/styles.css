@@ -98,6 +98,7 @@ body {
 .main-nav {
     position: relative;
     display: block;
+    margin-left: auto;
 }
 
 .nav-toggle {

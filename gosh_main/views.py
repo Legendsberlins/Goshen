@@ -1,5 +1,13 @@
-from django.contrib.auth import authenticate, login, logout, get_user_model
+from django.contrib.auth import (
+    authenticate,
+    login,
+    get_user_model,
+    SESSION_KEY,
+    BACKEND_SESSION_KEY,
+    HASH_SESSION_KEY,
+)
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth.forms import SetPasswordForm
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.db import IntegrityError
@@ -242,7 +250,12 @@ def login_view(request):
 
 
 def logout_view(request):
-    logout(request)
+    # Avoid full session flush to prevent SessionInterrupted in concurrent requests
+    # (for example, add-to-cart running at the same time as logout).
+    for auth_key in (SESSION_KEY, BACKEND_SESSION_KEY, HASH_SESSION_KEY):
+        request.session.pop(auth_key, None)
+    request.session.cycle_key()
+    request.user = AnonymousUser()
     return HttpResponseRedirect(reverse("gosh_main:home"))
 
 
