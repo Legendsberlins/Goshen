@@ -65,7 +65,8 @@ body {
 .site-header .container {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
+    gap: 1rem;
 }
 
 .header-left {
@@ -82,7 +83,7 @@ body {
 }
 
 .nav-logo {
-    height: clamp(44px, 6vw, 96px);
+    height: clamp(52px, 7vw, 112px);
     width: auto;
     display: block;
     transition: height 180ms ease, transform 180ms ease;
